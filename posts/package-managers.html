@@ -1,0 +1,141 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Package Managers and Security</title>
+  <link rel="canonical" href="https://blog.vnaik.com/">
+  <meta name="viewport" content="width=device-width,minimum-scale=1,initial-scale=1">
+  <link rel="icon" href="https://blog.vnaik.com/favicon.ico" type="image/x-icon">
+  <link rel="stylesheet" href="../tufte.css"/>
+  <style>
+  body {
+  	background-color: #ffffff;
+  	max-width: 45rem;
+    margin: 1rem auto;
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+  sup a {
+  	color: #555 !important;
+  	background: none !important;
+  }
+  footer>a {
+  	color: blue !important;
+  }
+  </style>
+</head>
+<body>
+	<h2><a href="/">Vnaik.com</a></h2>
+    <h1>Package Managers and Security</h1>
+    <hr />
+<div class="level2">
+
+<p>
+	Installing packages is such a routine part of software development that we rarely ever pause to think about it, and we often install packages without a second thought after reading something on Stackoverflow.<p>
+<p>However, there is a growing trend of extensions and packages being taken over by advertising companies and hackers. <sup><a href="#link-1">[1]</a> <a href="#link-2">[2]</a> <a href="#link-3">[3]</a> <a href="#link-4">[4]</a></sup>
+</p>
+
+<p>This means installing packages can be dangerous and should be done with some amount of thought and planning.</p>
+<p>Some dangers and considerations of package managers follow.</p>
+</div>
+<hr />
+<!-- EDIT2 SECTION "Version Pinning and auto updates" [582-1255] -->
+<h3 class="sectionedit3" id="typosquatting">Typosquatting</h3>
+<div class="level3">
+<p><strong>Typosquatting</strong> refers to the practise of registering a package with a name similar to an existing package. People install this by mistake. This happened recently with npm when the <strong>crossenv</strong> package was typosquatted when someone create the package <strong>cross-env</strong> to serve malware in addition to the normal functionality of crossenv. <sup><a href="#link-5">[5]</a> <a href="#link-6">[6]</a></sup></p>
+<p>
+A carefully crafted malware package can go undected for a long time. In addition typos when installing packages. Eg. typing </p>
+<p><pre>npm install requist</pre></p>
+<p>where you meant to type</p>
+<p><pre>npm install request</pre> </p>
+<p>can be dangerous if it installs a functionally equivalent package, but with malware bundled.</p>
+
+<p>This excellent article on <a href="http://incolumitas.com/2016/06/08/typosquatting-package-managers/" class="urlextern" title="http://incolumitas.com/2016/06/08/typosquatting-package-managers/" rel="nofollow">typosquatting package managers</a> examines the issue in depth.</p>
+ </div>
+ <hr />
+<!-- EDIT1 SECTION "Package managers and security" [1-581] -->
+<h3 class="sectionedit2" id="version_pinning_and_auto_updates">Version Pinning and auto updates</h3>
+<div class="level3">
+
+<p>
+It is unsafe to use package managers without explicit version pinning. It is safest to install an exact version of a package, eg. <pre>1.2.3</pre> as opposed to <pre>1.*.*</pre> or even <pre>1.2.*</pre><p>even if your package manager allows the latter two.</p>
+<p> There have been cases of package dev's accounts being taken over by hackers who then release a point version that auto upgrades itself.<sup><a href="#link-7">[7]</a></sup> Allowing packages to auto-update is <a href="https://www.lucidchart.com/techblog/2017/03/15/package-management-stop-using-version-ranges/" class="urlextern" title="https://www.lucidchart.com/techblog/2017/03/15/package-management-stop-using-version-ranges/" rel="nofollow">not a good idea</a> for security, but is also bad because you may wind up with entirely different packages across your dev and production environment or across developers.
+It is important to use npm-shrinkwrap or such to freeze package versions - and it is very important to maintain this carefully.
+</p>
+<p>Remember that whether or not any update is major or minor is determined solely by the package publisher, so expecting minor versions to be safe in all cases is probably not realistic.</p>
+
+</div>
+<hr>
+<!-- EDIT3 SECTION "Typosquatting" [1256-1819] -->
+<h3 class="sectionedit4" id="obfuscated_code">Obfuscated Code</h3>
+<div class="level3">
+
+<p>
+Having obfuscated code in a package is a significant red flag. Obfuscated (or binary) code in a package is reason enough to do without the package. Remember that this is a dev package library not an end user app - and hidden/binary code absolutely does not belong in your dev tools. And even if the hidden code is currently not malicious, that may not be true later - hiding code makes it harder to scrutinise, something hackers are very likely to exploit to their advantage.
+</p>
+</div>
+<hr>
+<!-- EDIT4 SECTION "Obfuscated Code" [1820-2297] -->
+<h3 class="sectionedit5" id="how_packages_become_compromised">How packages become compromised</h3>
+<p>To sum up, packages can become compromised in various ways, including but not limited to:</p>
+<div class="level3">
+<ul>
+<li class="level1"><div class="li">Typosquatting (eg. cross-env vs crossenv)</div>
+</li>
+<li class="level1"><div class="li">Dev accounts getting phished</div>
+</li>
+<li class="level1"><div class="li">Dev straight out sells the package (offers of $50k for popular packages are not uncommon)</div>
+</li>
+<li class="level1"><div class="li">Attackers manage to inject code into the package without the dev catching on</div>
+</li>
+</ul>
+<p>And once a package is compromised a simple minor point release to inject malicious code combined with a package manager that auto-updates minor versions helps propagate the malware.</p>
+</div>
+<hr>
+<!-- EDIT5 SECTION "How packages become compromised" [2298-2653] -->
+<h3 class="sectionedit6" id="security_updates">More secure than a house of cards</h3>
+<div class="level3">
+<p>
+The OWASP lists using packages with known vulnerabilities in the <a href="https://www.owasp.org/images/f/f8/OWASP_Top_10_-_2013.pdf" class="urlextern" title="https://www.owasp.org/images/f/f8/OWASP_Top_10_-_2013.pdf" rel="nofollow">top ten ways applications are vulnerable/become compromised.</a>
+</p>
+
+<p>
+As developers, we are ultimately responsible for our work - and if a third party package is compromised, through no fault of our own, it is still the developers who have to clean up and manage the situation as far as the code is concerned.
+</p>
+
+<p>
+A barebones ExpressJs app created with the Express creation tool has about 50 dependencies (including sub-dependencies). That's a massive attack surface.
+</p>
+
+<p>
+If a hacker detects a vulnerability in one package every single webapp on the Internet that uses the package is now compromised. This is a very strong incentive for hackers and you can expect the number of attacks on packages to rise over time. Visibility will be higher for more popular packages meaning you are likely to be notified of hacks sooner - if those hacks are ever detected in the first place.
+</p>
+
+<p>To sum up,</p>
+	<ul>
+		<li>There is no foolproof way to be sure your packages are secure so being vigilant is important</li>
+		<li>Do not allow any automatic package updates. Instead carefully plan and manage updates manually</li>
+		<li>Maintaining a local package cache may help but is hard to maintain</li>
+		<li>Package audit tools like <a href="https://github.com/nodesecurity/nsp" class="urlextern" title="https://github.com/nodesecurity/nsp" rel="nofollow">Nsp</a> or <a href="https://github.com/rubysec/bundler-audit" class="urlextern" title="https://github.com/rubysec/bundler-audit" rel="nofollow">Bundler-audit</a> can help; and if you use Github it can automaticall audit npm packages for you</li>
+		<li>Tools such as <a href="https://libraries.io/" class="urlextern" title="https://libraries.io/" rel="nofollow">libraries.io/</a> can help you maintain your package lists</li>
+	</ul>
+
+
+
+</div>
+
+<hr />
+<footer>
+	<h3>Footnotes</h3>
+<p id="link-1">[1]: <a href="https://twitter.com/o_cee/status/892306836199800836" class="urlextern" title="https://twitter.com/o_cee/status/892306836199800836" rel="nofollow">https://twitter.com/o_cee/status/892306836199800836</a></p>
+<p id="link-2">[2]: <a href="http://www.drinchev.com/blog/alert-npm-modules-hijacked/" class="urlextern" title="http://www.drinchev.com/blog/alert-npm-modules-hijacked/" rel="nofollow">http://www.drinchev.com/blog/alert-npm-modules-hijacked/</a></p>
+<p id="link-3">[3]: <a href="https://news.ycombinator.com/item?id=14902630" class="urlextern" title="https://news.ycombinator.com/item?id=14902630" rel="nofollow">https://news.ycombinator.com/item?id=14902630</a></p>
+<p id="link-4">[4]: <a href="https://www.bleepingcomputer.com/news/security/52-percent-of-all-javascript-npm-packages-could-have-been-hacked-via-weak-credentials/" class="urlextern" title="https://www.bleepingcomputer.com/news/security/52-percent-of-all-javascript-npm-packages-could-have-been-hacked-via-weak-credentials/" rel="nofollow">https://www.bleepingcomputer.com/news/security/52-percent-of-all-javascript-npm-packages-could-have-been-hacked-via-weak-credentials/</a></p>
+<p id="link-5">[5]: <a href="https://news.ycombinator.com/item?id=14901566" class="urlextern" title="https://news.ycombinator.com/item?id=14901566" rel="nofollow">https://news.ycombinator.com/item?id=14901566</a></p>
+<p id="link-6">[6]: <a href="https://arstechnica.com/information-technology/2017/09/devs-unknowingly-use-malicious-modules-put-into-official-python-repository/" class="urlextern" title="https://arstechnica.com/information-technology/2017/09/devs-unknowingly-use-malicious-modules-put-into-official-python-repository/" rel="nofollow">https://arstechnica.com/information-technology/2017/09/devs-unknowingly-use-malicious-modules-put-into-official-python-repository/</a></p>
+<p id="link-7">[7]: <a href="https://a9t9.com/blog/chrome-extension-adware/">Our Copyfish extension was stolen and adware-infested</a></p>
+</ul>
+
+<a href="/">&laquo;Back to homepage</footer>
+</body>
+</html>
