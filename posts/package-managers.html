@@ -9,30 +9,29 @@
   <link rel="stylesheet" href="../tufte.css"/>
   <style>
   body {
-  	background-color: #ffffff;
-  	max-width: 45rem;
+    background-color: #ffffff;
+    max-width: 45rem;
     margin: 1rem auto;
     padding-left: 1rem;
     padding-right: 1rem;
   }
   sup a {
-  	color: #555 !important;
-  	background: none !important;
+    color: #555 !important;
+    background: none !important;
   }
   footer>a {
-  	color: blue !important;
+    color: blue !important;
   }
   </style>
 </head>
 <body>
-	<h2><a href="/">Vnaik.com</a></h2>
+  <h2><a href="/">Vnaik.com</a></h2>
     <h1>Package Managers and Security</h1>
     <hr />
 <div class="level2">
-
 <p>
-	Installing packages is such a routine part of software development that we rarely ever pause to think about it, and we often install packages without a second thought after reading something on Stackoverflow.<p>
-<p>However, there is a growing trend of extensions and packages being taken over by advertising companies and hackers. <sup><a href="#link-1">[1]</a> <a href="#link-2">[2]</a> <a href="#link-3">[3]</a> <a href="#link-4">[4]</a></sup>
+  Installing packages with npm, pip and the like is such a routine part of software development that we rarely even pause to think about it, often installing packages as recommended by an answer on Stackoverflow without a second thought.<p>
+<p>However, there is a growing trend of extensions and packages being taken over by hackers and advertising companies. <sup><a href="#link-1">[1]</a> <a href="#link-2">[2]</a> <a href="#link-3">[3]</a> <a href="#link-4">[4]</a></sup>
 </p>
 
 <p>This means installing packages can be dangerous and should be done with some amount of thought and planning.</p>
@@ -112,13 +111,13 @@ If a hacker detects a vulnerability in one package every single webapp on the In
 </p>
 
 <p>To sum up,</p>
-	<ul>
-		<li>There is no foolproof way to be sure your packages are secure so being vigilant is important</li>
-		<li>Do not allow any automatic package updates. Instead carefully plan and manage updates manually</li>
-		<li>Maintaining a local package cache may help but is hard to maintain</li>
-		<li>Package audit tools like <a href="https://github.com/nodesecurity/nsp" class="urlextern" title="https://github.com/nodesecurity/nsp" rel="nofollow">Nsp</a> or <a href="https://github.com/rubysec/bundler-audit" class="urlextern" title="https://github.com/rubysec/bundler-audit" rel="nofollow">Bundler-audit</a> can help; and if you use Github it can automaticall audit npm packages for you</li>
-		<li>Tools such as <a href="https://libraries.io/" class="urlextern" title="https://libraries.io/" rel="nofollow">libraries.io/</a> can help you maintain your package lists</li>
-	</ul>
+  <ul>
+    <li>There is no foolproof way to be sure your packages are secure so being vigilant is important</li>
+    <li>Do not allow any automatic package updates. Instead carefully plan and manage updates manually</li>
+    <li>Maintaining a local package cache may help but is hard to maintain</li>
+    <li>Package audit tools like <a href="https://github.com/nodesecurity/nsp" class="urlextern" title="https://github.com/nodesecurity/nsp" rel="nofollow">Nsp</a> or <a href="https://github.com/rubysec/bundler-audit" class="urlextern" title="https://github.com/rubysec/bundler-audit" rel="nofollow">Bundler-audit</a> can help; and if you use Github it can automaticall audit npm packages for you</li>
+    <li>Tools such as <a href="https://libraries.io/" class="urlextern" title="https://libraries.io/" rel="nofollow">libraries.io/</a> can help you maintain your package lists</li>
+  </ul>
 
 
 
@@ -126,7 +125,7 @@ If a hacker detects a vulnerability in one package every single webapp on the In
 
 <hr />
 <footer>
-	<h3>Footnotes</h3>
+  <h3>Footnotes</h3>
 <p id="link-1">[1]: <a href="https://twitter.com/o_cee/status/892306836199800836" class="urlextern" title="https://twitter.com/o_cee/status/892306836199800836" rel="nofollow">https://twitter.com/o_cee/status/892306836199800836</a></p>
 <p id="link-2">[2]: <a href="http://www.drinchev.com/blog/alert-npm-modules-hijacked/" class="urlextern" title="http://www.drinchev.com/blog/alert-npm-modules-hijacked/" rel="nofollow">http://www.drinchev.com/blog/alert-npm-modules-hijacked/</a></p>
 <p id="link-3">[3]: <a href="https://news.ycombinator.com/item?id=14902630" class="urlextern" title="https://news.ycombinator.com/item?id=14902630" rel="nofollow">https://news.ycombinator.com/item?id=14902630</a></p>
