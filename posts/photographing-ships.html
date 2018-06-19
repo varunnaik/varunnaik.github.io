@@ -7,31 +7,16 @@
   <meta name="viewport" content="width=device-width,minimum-scale=1,initial-scale=1">
   <link rel="icon" href="https://blog.vnaik.com/favicon.ico" type="image/x-icon">
   <link rel="stylesheet" href="../tufte.css"/>
-  <style>
-  body {
-    background-color: #ffffff;
-    max-width: 45rem;
-    margin: 1rem auto;
-    padding-left: 1rem;
-    padding-right: 1rem;
-  }
-  sup a {
-    color: #555 !important;
-    background: none !important;
-  }
-  footer>a {
-    color: blue !important;
-  }
-  </style>
+  <link rel="stylesheet" href="../style.css" />
 </head>
 <body>
   <h2><a href="/">Vnaik.com</a></h2>
 
-    <h1>Tracking and Photographing Ships with Software Defined Radio</h1>
+    <h1>Track and Photographing Ships with Software Defined Radio</h1>
     <hr />
 <p>With a Software Defined Radio you can pick up all kinds of interesting signals with cheap commercial hardware. A RTL dongle is easily obtained online and can be connected to a Raspberry Pi to create a platform for experiments. I used an <a href="http://www.nooelec.com/store/nesdr-mini-rtl2832-r820t.html">RTL2832 dongle</a> for this project, although there are several options available as listed on the <a href="https://www.rtl-sdr.com/">RTL-SDR website</a>.</p>
 
-<p>Living in a coastal city such as Sydney, you experience several aspects of life on the shore - the sea breeze, sea gulls, and of course, ships. Ships at sea broadcast AIS (Automatic Identification System) messages every few minutes when underway. They also broadcast messages when at port at a slower frequency. The AIS system aids navigation - other vessels can use this information to plot their courses, avoiding collisions.</p>
+<p>Ships at sea broadcast AIS (Automatic Identification System) messages every few minutes when underway. They also broadcast messages when at port at a slower frequency. The AIS system aids navigation - other vessels can use this information to plot their courses, avoiding collisions.</p>
 
 <p>This project uses the RTL dongle to listen to these signals and track ships as they move into and out of the Sydney harbour.</p>
 
