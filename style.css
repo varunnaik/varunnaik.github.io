@@ -1,3 +1,16 @@
-html {
-	
+body {
+    background-color: #ffffff;
+    max-width: 45rem;
+    margin: 1rem auto;
+    padding-left: 1rem;
+    padding-right: 1rem;
+}
+
+sup a {
+    color: #555 !important;
+    background: none !important;
+}
+
+footer>a {
+    color: blue !important;
 }
