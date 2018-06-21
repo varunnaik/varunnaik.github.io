@@ -13,3 +13,7 @@ sup a {
 footer>a {
     color: blue !important;
 }
+footer span {
+	text-align: right;
+	width: 100%;
+}
