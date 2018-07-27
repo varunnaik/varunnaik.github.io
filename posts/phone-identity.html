@@ -1,0 +1,38 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Your phone number is not your identity</title>
+  <link rel="canonical" href="https://blog.vnaik.com/">
+  <meta name="viewport" content="width=device-width,minimum-scale=1,initial-scale=1">
+  <link rel="icon" href="https://blog.vnaik.com/favicon.ico" type="image/x-icon">
+  <link rel="stylesheet" href="../tufte.css"/>
+  <link rel="stylesheet" href="../style.css" />
+</head>
+<body>
+  <h2><a href="/">Vnaik.com</a></h2>
+<article>
+
+	<h1>Your phone number is not your identity</h1>
+
+	<p>Using a phone to verify identity - eg. when signing up for a service online - is a bad idea. This typically happens by sending an SMS to your phone with a code that you type into the website - two factor authentication.</p>
+
+	<p>Two-factor authentication (2FA) done with a dedicated device like a Yubikey is a very good idea. Using a phone with SMS messages for this is not such a good idea, for a few reasons:
+
+	<ol>
+	<li>You don't own your phone number, your service provider does. And they can lease it to someone else in accordance to their terms and conditions. I learned this the hard way when my phone company leased my number to someone else after I moved countries. The new person got all my messages from my bank, tax, and every other service I signed up for. Most services also won't let you change your phone number without first sending a confirmation SMS to your current phone.</li>	
+
+	<li>Phone numbers are vulnerable to social engineering. A good social engineer can impersonate you, claim you lost your phone, and convince customer service to transfer your phone number directly to their phone. Customer service refuses? Try again in a few hours to get a different agent, and continue till someone agrees to the request.</li>
+
+	<li>If your phone is set to display the message text on the lock screen, any code can be read over your shoulder without even having to unlock your phone.</li>
+
+	<p>Overall, using a phone number to confirm identity is dangerous for all these reasons. If your phone number should happen to be compromised fixing the situation can be extremely difficult.</p>
+
+	<p>On the other hand, using a dedicated security device such as a <a href="https://www.yubico.com/" nofollow>Yubikey</a> for 2FA makes your account much safer.</p>
+</article>
+    
+
+
+<footer><a href="/">&laquo;Back to homepage</a> <span>&copy; 2018, Varun Naik</span></footer>
+</body>
+</html>
