@@ -1,0 +1,313 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Pattern Study 1</title>
+  <link rel="canonical" href="https://blog.vnaik.com/">
+  <meta name="viewport" content="width=device-width,minimum-scale=1,initial-scale=1">
+  <link rel="icon" href="https://blog.vnaik.com/favicon.ico" type="image/x-icon">
+  <link rel="stylesheet" href="../tufte.css"/>
+  <link rel="stylesheet" href="../style.css" />
+</head>
+<body>
+  <h2><a href="/">Vnaik.com</a></h2>
+<article>
+
+	<h1>Pattern Study - 1</h1>
+
+	<p>I recently came across this interesting geometric pattern that involves squares (trapezoids, more precisely). This is an exploration of this pattern.</p>
+	<figure><canvas id="box2" width="600px" height="600px" class="resize"></canvas></figure>
+	<p>This pattern is made up of several alternating squares, each containing a number of rhombuses.</p>
+
+	<p>The different elements become more clear when the squares are randomly coloured.</p>
+		<figure class="fullwidth"><canvas id="box3" width="600px" height="600px" class="resize"></canvas></figure>
+	<p>This is an individual box.</p>
+	<figure><canvas id="box1" width="600px" height="600px" class="resize"></canvas></figure>
+	<p>It's constructed as illustrated below, by inscribing successively smaller rhombuses inside the original square. Each of the rhombuses are slightly rotated with respect to the previous one.</p>
+    <figure><canvas id="box6" width="300px" height="200px"></canvas><button onclick="drawDemoBox()">Restart</button></figure>
+	<p>Alternate squares are rotated in opposite directions.</p>
+	<p>It is interesting how a spiral emerges from a figure constructed entirely out of straight lines.</p>	
+	<figure class="fullwidth"><canvas id="box4" width="600px" height="600px" class="resize"></canvas></figure>
+	<p>Finally, I used an animation to really bring the figure to life. The outermost square is rotated through 20 degrees in each step. Each inscribed one is rotated by a successively smaller amount, and this leads to some very interesting patterns emerging.</p>
+	<figure><canvas id="box5" width="600px" height="600px" class="resize"></canvas></figure>
+	<p>View the source of this webapge to see the code used to generate these images.</p>
+	<p>It's fascinating how sometimes a simple set of rules applied multiple times results in something quite unlike what was started with.</p>
+</article>
+<footer><a href="/">&laquo;Back to homepage</a> <span>&copy; 2018, Varun Naik</span></footer>
+
+  <script>
+      class Box {
+            constructor(context, x, y, w, h, ltr, iterations, dist, color) {
+                this.context = context;
+                this.ltr = ltr;
+                if (ltr) {
+                    this.coords = { x1: x, y1: y, x2: x, y2: y + h, x3: x + w, y3: y + h, x4: x + w, y4: y };
+                } else {
+                    this.coords = { x1: x, y1: y, x2: x + w, y2: y, x3: x + w, y3: y + h, x4: x, y4: y + h };
+                }
+                this.pos = { x, y };
+                this.dim = { w, h };
+                this.figures = [];
+                this.dist = dist || 5;
+                this.iterations = iterations || 25;
+                this.color = color || getRandomColor();
+                this.rotation = 0;
+            }
+
+            compute() {
+                // Calculate box co-ordinates and store inside array
+                let nextCoords = Object.values(this.coords);
+                this.figures.push(nextCoords)
+                for (let i = 0; i < this.iterations; i++) {
+                    nextCoords = computeBoxBounds(...nextCoords, this.dist);
+                    this.figures.push(nextCoords)
+                }
+            }
+
+            rotate(a = 20) {
+                this.rotation = a * (1 + (this.dist / 10));
+                this.rotation *= this.ltr ? -1 : 1;
+                const xm = this.dim.w / 2 + this.pos.x,
+                    ym = this.dim.h / 2 + this.pos.y;
+
+                let f, x, y;
+                let rotationMultiplier = 1;
+                for (let i = 0; i < this.figures.length; i++) {
+                    f = this.figures[i];
+                    for (let j = 0; j < 7; j += 2) {
+                        [x, y] = rotate(f[j], f[j + 1], xm, ym, (this.rotation * rotationMultiplier));
+                        f[j] = x; f[j + 1] = y;
+                    }
+                    rotationMultiplier -= this.dist / 10;
+                }
+            }
+
+            setColor(c) {
+                this.color = c;
+            }
+
+            redraw() {
+                this.context.clearRect(this.pos.x, this.pos.y, this.dim.w, this.dim.h);
+                this.context.moveTo(this.pos.x, this.pos.y);
+
+                // Clip region so anything outside the rect is hidden
+                this.context.save();
+                this.context.beginPath();
+                this.context.rect(this.pos.x, this.pos.y, this.dim.h, this.dim.w)
+                this.context.clip();
+
+                this.context.strokeRect(this.pos.x, this.pos.y, this.dim.h, this.dim.w);
+                this.context.beginPath();
+                this.figures.forEach(([x1, y1, x2, y2, x3, y3, x4, y4]) => {
+                    this.context.moveTo(x1, y1);
+                    this.context.lineTo(x2, y2);
+                    this.context.lineTo(x3, y3);
+                    this.context.lineTo(x4, y4);
+                    this.context.lineTo(x1, y1);
+                });
+                this.context.strokeStyle = this.color;
+                this.context.stroke();
+                this.context.restore();
+            }
+
+            drawSpin(a = 20, speed = 200) {
+
+                const spin = (a, speed, totalSpin) => {
+                    if (totalSpin >= 360) return;
+                    this.rotate(a);
+                    this.redraw();
+                    setTimeout(() => spin(a * 2, speed, totalSpin + a * 2), speed)
+                }
+                // Spin this figure once and return to its original state
+                if (a >= 360 || 360 % a !== 0) {
+                    return false;
+                }
+
+                spin(a, speed, 0);
+            }
+        }
+
+        const computePointAtDistance = (x0, y0, x1, y1, d) => {
+            // Computes the coordinates of a point along the line (x0, y0) - (x1, y1)
+            // at a distance d from (x0, y0)
+            // https://math.stackexchange.com/questions/175896/finding-a-point-along-a-line-a-certain-distance-away-from-another-point
+            const v1 = x1 - x0;
+            const v2 = y1 - y0;
+            const dividend = Math.sqrt(Math.pow(v1, 2) + Math.pow(v2, 2));
+            const u0 = v1 / dividend;
+            const u1 = v2 / dividend;
+
+            return [x0 + d * u0, y0 + d * u1]
+        }
+
+        const distanceBetweenPoints = (x0, y0, x1, y1) => {
+            return Math.sqrt(Math.pow(x1 - x0, 2) + Math.pow(y1 - y0, 2))
+        }
+
+        const computeBoxBounds = (x1, y1, x2, y2, x3, y3, x4, y4, dist) => {
+            const [x5, y5] = computePointAtDistance(x1, y1, x2, y2, dist);
+            const [x6, y6] = computePointAtDistance(x2, y2, x3, y3, dist);
+            const [x7, y7] = computePointAtDistance(x3, y3, x4, y4, dist);
+            const [x8, y8] = computePointAtDistance(x4, y4, x1, y1, dist);
+            return [x5, y5, x6, y6, x7, y7, x8, y8]
+        }
+
+        function getRandomColor() {
+            var letters = '0123456789ABCDEF';
+            var color = '#';
+            for (var i = 0; i < 6; i++) {
+                color += letters[Math.floor(Math.random() * 16)];
+            }
+            return color;
+        }
+
+        function sleep(ms) {
+            return new Promise(resolve => setTimeout(resolve, ms));
+        }
+
+        function rotate(x, y, xm, ym, a) {
+
+            var cos = Math.cos,
+                sin = Math.sin,
+
+                a = a * Math.PI / 180, // Convert to radians because that is what
+                // JavaScript likes
+
+                // Subtract midpoints, so that midpoint is translated to origin
+                // and add it in the end again
+                xr = (x - xm) * cos(a) - (y - ym) * sin(a) + xm,
+                yr = (x - xm) * sin(a) + (y - ym) * cos(a) + ym;
+
+            return [xr, yr];
+        }
+
+        let drawing = false;
+        const drawDemoBox = async () => {
+        	if (drawing) return;
+        	drawing = true;
+        	document.querySelector('button').style.visibility="hidden"
+	        canvas = document.querySelector('#box6');
+	        context = canvas.getContext('2d');
+
+	        let demoBox = null;
+	        let demoBox2 = null;
+	        for (let i = 1; i < 16; i++) {
+	        	demoBox = new Box(context, 0, 0, 150, 150, false, i, 10, '#000044')
+	        	demoBox.compute();
+	        	demoBox.redraw();
+	        	demoBox2 = new Box(context, 150, 0, 150, 150, true, i, 10, '#000044')
+	        	demoBox2.compute();
+	        	demoBox2.redraw();
+	        	await sleep(800)
+	        }
+	        document.querySelector('button').style.visibility="visible"
+	        drawing = false;
+        }
+
+        let intervalHandles = [];
+        const renderDiagrams = () => {
+        	// TODO: GET Window dimensions and set canvas size appropriately
+        	// Also set boxSide appropriately
+
+        	intervalHandles.forEach(handle => clearInterval(handle))
+        	intervalHandles = [];
+
+        	var clientWidth = window.innerWidth
+				|| document.documentElement.clientWidth
+				|| document.body.clientWidth;
+
+			var clientHeight = window.innerHeight
+				|| document.documentElement.clientHeight
+				|| document.body.clientHeight;
+
+
+			let width = 600, height = 600, boxSide = 100;
+			if (clientWidth < 500) {
+				width = height = 300; boxSide = 75;
+			}
+			else if (clientWidth < 670) {
+				width = height = 400; boxSide = 75;
+			}
+
+			document.querySelectorAll('canvas.resize').forEach(e => {
+				e.height = height;
+				e.width = width;
+				console.log(e);
+				console.log(e.height, height)
+			})
+
+	        let canvas = document.querySelector('#box1');
+	        let context = canvas.getContext('2d');        
+
+	        const box1 = new Box(context, 0, 0, canvas.width, canvas.height, false, 1000, 5, '#000078');
+	        box1.compute();
+	        box1.redraw();
+
+	        canvas = document.querySelector('#box2');
+	        context = canvas.getContext('2d');
+
+	        let counter = 0;
+			for (let i = 0; i < canvas.height; i += boxSide) {
+	            for (let j = 0; j < canvas.width; j += boxSide) {
+	                const box = new Box(context, j, i, boxSide, boxSide, counter % 2 === 0, 35, 4, '#323232');
+	                box.compute();
+	                box.redraw();
+	                counter += 1;
+	            }
+	        }
+
+	        canvas = document.querySelector('#box3');
+	        context = canvas.getContext('2d');
+
+			counter = 0;
+			for (let i = 0; i < canvas.height; i += boxSide) {
+	            for (let j = 0; j < canvas.width; j += boxSide) {
+	                const box = new Box(context, j, i, boxSide, boxSide, counter % 2 === 0, 35, 4);
+	                box.compute();
+	                box.redraw();
+	                counter += 1;
+	            }
+	        }
+
+	        canvas = document.querySelector('#box4');
+	        context = canvas.getContext('2d');
+
+			counter = 0;
+			const boxes = [];
+			for (let i = 0; i < canvas.height; i += boxSide) {
+	            for (let j = 0; j < canvas.width; j += boxSide) {
+	                const box = new Box(context, j, i, boxSide, boxSide, counter % 2 === 0, 35, 4, '#cf0000');
+	                box.compute();
+	                boxes.push(box);
+	                counter += 1;
+	            }
+	        }
+
+	        intervalHandles.push(setInterval(() => {
+	            boxes.forEach(box => {
+	                box.rotate(1);
+	                box.redraw();
+	            })
+	        }, 100));
+
+	        canvas = document.querySelector('#box5');
+	        context = canvas.getContext('2d');
+
+	        const box = new Box(context, 0, 0, canvas.width, canvas.height, false, 1000)
+	        box.compute();
+	        intervalHandles.push(setInterval(() => {
+	            box.rotate(0.5);
+	            box.redraw();
+	        }, 100));
+
+	        drawDemoBox();
+        }
+
+       
+        window.onresize = renderDiagrams;
+        window.onload = renderDiagrams;
+
+
+  </script>
+</body>
+</html>

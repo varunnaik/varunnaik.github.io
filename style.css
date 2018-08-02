@@ -4,7 +4,9 @@ body {
     padding-left: 1rem;
     padding-right: 1rem;
 }
-
+h1 {
+    margin-top: 0;
+}
 sup a {
     color: #555 !important;
     background: none !important;
