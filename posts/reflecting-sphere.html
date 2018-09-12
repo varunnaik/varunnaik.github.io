@@ -22,8 +22,14 @@
             padding-top: 20px;
             line-height: 1.5;
         }
-        #balls {
-            max-width: 100vw;
+        #videoElement {
+            width: 1920px;
+            height: 1080px;
+            background-color: #666;
+        }
+        canvas {
+            width: 100%;
+            height: 100%
         }
         @media screen and (max-width: 400px) {
             #balls {
@@ -58,17 +64,9 @@
         <p>This will be used to render the sphere.</p>
         <pre class="prettyprint">
 const scene = new THREE.Scene();
-const camera = new THREE.PerspectiveCamera(45, 
-width / height, 0.01, 100);
-const renderer = new THREE.WebGLRenderer({ 
-    alpha: true, antialias: true });
-renderer.shadowMap.enabled = true;
-renderer.shadowMapSoft = true;
-renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+const camera = new THREE.PerspectiveCamera(45, width / height, 0.01, 100);
+const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
         </pre>
-        <p>The last three lines enable the soft shadow map on the renderer (as opposed to the hard shadow map which is
-            default and not so pretty). This enables real-time shadows in the scene for lights and objects that are set
-            up to cast shadows.</p>
 
         <h3>Step 2: Add lighting</h3>
         <p>ThreeJs has several types of lights (and cameras) each with their own features. A simple AmbientLight would
@@ -151,7 +149,7 @@ gl_FragColor = vec4(gcol, 1.0);
 
         <p>Fragment shaders are a fascinating subject, and too complicated to go into detail here.</p>
         <p><a href="https://pixelshaders.com">Pixelshaders.com</a> is an incredible resource to get started with shader programming, explaining the basics for beginners.</p>
-        <p><a href="https://shadertoy.com">And Shadertoy</a> provides many shaders to play with, you can edit them right in the browser.</a></p>
+        <p><a href="https://shadertoy.com">Shadertoy</a> provides many shaders to play with, you can edit them right in the browser.</a></p>
 
         <h3>Step 6: Use the phone gyroscope to move the lights as you move your phone</h3>
         <p>The shadow below looks more realistic if it moves along with your phone. Making this happen is as simple as getting the angle of rotation from the phone gyroscope and moving the light appropriately.</p>
@@ -166,28 +164,34 @@ window.addEventListener("deviceorientation", function (event) {
         <p>This post covers the important bits of code, but a lot of what is needed to get this project to run has been left out.</p>
         <p>View the source of this webpage for the full working code.</p>
 
+        <!-- Project code begins below -->
         <video autoplay="true" id="videoElement" style="display: none"></video>
         <canvas height="1000" width="1000" id="videoImage" style="display:none"></canvas>
-        <canvas height="320" width="240" id="headTracker" style="display:none"></canvas>
         <script>
-            const width = Math.min(window.innerWidth, window.innerHeight);
+            const width = Math.min(window.innerWidth, window.innerHeight, 500);
             const height = width;
             const sphereRadius = 0.54;
 
             const video = document.querySelector("#videoElement");
-            const scene = new THREE.Scene();
-            const camera = new THREE.PerspectiveCamera(45, width / height, 0.01, 100);
-            camera.position.z = 2.9 * sphereRadius;
-            camera.position.y = 1.5 * sphereRadius;
-            camera.lookAt(new THREE.Vector3(0, 0, 0));
 
+            // Set up scene and renderer
+            const scene = new THREE.Scene();
             const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
             // TODO change on window resize
+            renderer.setPixelRatio( window.devicePixelRatio );
             renderer.setSize(width, height);
             renderer.shadowMap.enabled = true;
             renderer.shadowMapSoft = true;
             renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 
+            // Create a camera and position it
+            const camera = new THREE.PerspectiveCamera(45, width / height, 0.01, 100);
+            camera.position.z = 2.9 * sphereRadius;
+            camera.position.y = 1.5 * sphereRadius;
+            camera.lookAt(new THREE.Vector3(0, 0, 0));
+
+
+            // Add a spotLight to cast shadows and tweak its position
             const spotLight = new THREE.SpotLight(0xffffff, 2);
             spotLight.position.set(-10, 150, -10);
             spotLight.penumbra = 0;
@@ -196,35 +200,33 @@ window.addEventListener("deviceorientation", function (event) {
             spotLight.castShadow = true;
             spotLight.shadow.bias = 0.001;
             spotLight.shadow.radius = 1;
-            spotLight.shadow.mapSize.width = 4096;
+            spotLight.shadow.mapSize.width = 4096; // Larger size = better quality
             spotLight.shadow.mapSize.height = 4096;
-
             scene.add(spotLight);
 
-
+            // Send webcam stream to the <video> tag
             if (navigator.mediaDevices.getUserMedia) {
                 navigator.mediaDevices.getUserMedia({ video: true })
-                    .then(function (stream) {
-                        video.srcObject = stream;
-                    })
-                    .catch(function (err) {
-                        //alert(err)
-                    });
+                    .then(stream => video.srcObject = stream)
+                    .catch(err => {});
             }
 
+            // Video to canvas
             const videoImage = document.getElementById('videoImage');
             videoImageContext = videoImage.getContext('2d');
             // background color if no video present
             videoImageContext.fillStyle = '#fffff8';
             videoImageContext.fillRect(0, 0, videoImage.width, videoImage.height);
             videoImageContext.scale(0.5, 1);
+
+            // Canvas to texture
             const videoTextureM = new THREE.Texture(videoImage);
             videoTextureM.minFilter = THREE.LinearFilter;
             videoTextureM.magFilter = THREE.LinearFilter;
             videoTextureM.wrapS = THREE.ClampToEdgeWrapping;
             videoTextureM.wrapT = THREE.ClampToEdgeWrapping;
 
-
+            // Apply shader on texture
             var movieMaterial = new THREE.ShaderMaterial({
                 uniforms: {
                     "webcam": { type: 't', value: videoTextureM }
@@ -279,6 +281,7 @@ window.addEventListener("deviceorientation", function (event) {
                         }`,
             });
 
+            // Texture to sphere
             var sphere1 = new THREE.Mesh(
                 new THREE.SphereGeometry(sphereRadius, 64, 64),
                 movieMaterial
@@ -287,7 +290,9 @@ window.addEventListener("deviceorientation", function (event) {
             sphere1.receiveShadow = false;
             scene.add(sphere1);
             sphere1.position.y = 0.10;
-            /* The ball */
+
+            // The shader material does not do shadows. We can either compute the shadows in the fragment shader, or 
+            // Create a second sphere identical to the first except that it is transparent to do the shadows
             const shadowMaterial = new THREE.ShadowMaterial();
             shadowMaterial.opacity = 0.5;
             shadowMaterial.dithering = true;
@@ -301,6 +306,7 @@ window.addEventListener("deviceorientation", function (event) {
             sphere.position.y = 0.1;
             scene.add(sphere);
 
+            // Add and position the floor
             var floorGeometry = new THREE.PlaneBufferGeometry(1000, 1000);
             var floor = new THREE.Mesh(floorGeometry,
                 new THREE.MeshPhongMaterial({ color: 0xfffff8 })
@@ -314,10 +320,12 @@ window.addEventListener("deviceorientation", function (event) {
             floor.receiveShadow = true;
             scene.add(floor);
 
+            // Render the scene on the page
             scene.background = new THREE.Color(0xfffff8);
             document.querySelector('#balls').appendChild(renderer.domElement);
             render();
 
+            // Update the texture each frame
             let x = 0; let y = 0; let h = videoImage.height; let w = videoImage.width;
             function render() {
                 if (video.readyState === video.HAVE_ENOUGH_DATA) {
@@ -330,6 +338,7 @@ window.addEventListener("deviceorientation", function (event) {
                 renderer.render(scene, camera);
             }
 
+            // Gyroscope events
             window.addEventListener("deviceorientation", function (event) {
 
                 // alpha: rotation around z-axis
