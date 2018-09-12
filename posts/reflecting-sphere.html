@@ -78,9 +78,9 @@ spotLight.position.set( -10, 150, -10 );
 scene.add( spotLight );
         </pre>
         <p>Using a camera helper and the OrbitControls helper is invaluable in testing and debugging anything to do
-            with ThreeJs.</p>
+            with ThreeJs.</p> <p>The camera helper helps trace how the light affects the screen and the orbit controls helps adjust the camera for best effect.</p>
         <p>Setting up the lights and camera just right so they focus on the right part of the scene at the right
-            distance and angle can be tedious without them.</p>
+            distance and angle can be tedious without these tools.</p>
 
         <h3>Step 3: Add the sphere and a floor below it to receive shadows</h3>
         <pre class="prettyprint">
@@ -106,7 +106,7 @@ scene.add(floor);
         </pre>
         <p>This adds the sphere and a floor, and then translates and rotates the floor into position beneath the
             sphere, ready to catch the sphere's shadows.</p>
-        <p>The objects consists of a geometry, with geomethry-specific features - number of sides and faces; and a
+        <p>Both objects consist of a geometry, specifying the number of sides and faces; and a
             material which describes its appearance. This is a solid colour for now.</p>
 
         <h3>Step 4: Replace the solid colour material with a webcam feed</h3>
