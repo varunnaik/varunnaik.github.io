@@ -1,0 +1,341 @@
+<!doctype html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <title>Escher's Reflecting Sphere</title>
+    <link rel="canonical" href="https://blog.vnaik.com/">
+    <meta name="viewport" content="width=device-width,minimum-scale=1,initial-scale=1">
+    <link rel="icon" href="https://blog.vnaik.com/favicon.ico" type="image/x-icon">
+    <link rel="stylesheet" href="../tufte.css" />
+    <link rel="stylesheet" href="../style.css" />
+    <script src="https://cdn.rawgit.com/google/code-prettify/master/loader/run_prettify.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/96/three.js"></script>
+    <style>
+        body {
+            background: white;
+        }
+        pre.prettyprint {
+            border: 0;
+            border-top: 1px #ccc solid;
+            border-bottom: 1px #ccc solid;
+            padding-top: 20px;
+            line-height: 1.5;
+        }
+    </style>
+</head>
+
+<body>
+    <h2><a href="/">Vnaik.com</a></h2>
+    <article>
+
+        <h1>Escher's Reflecting Sphere</h1>
+
+        <p>The Dutch artist M.C. Escher is one of my favourite artists. His surreal depcitions of recursion,
+            self-reference, and infinity strike a strong chord with me as a programmer.</p>
+        <p>This is an attempt at creating artwork inspired by his famous self-portrait, using Javascript and ThreeJs, Pixel Shaders,
+            and a phone camera.</p>
+
+
+        <p>First, the result: A sphere that reflects the webcam image.</p>
+
+        <div id="balls"></div>
+
+        <p>Of course, this has some deficiencies - because a phone camera is flat, you do not see atrue 3D view, so the
+            hand holding the phone is never visisble. However, the phone sensors do allow us some other liberties, such
+            as adding a shadow beneath the sphere.</p>
+        <p>This is how the effect above is produced.</p>
+        <hr />
+        <h3>Step 1: Create a renderer and scene using <a href="https://threejs.org">ThreeJS</a></h3>
+        <p>This will be used to render the sphere.</p>
+        <pre class="prettyprint">
+const scene = new THREE.Scene();
+const camera = new THREE.PerspectiveCamera(45, 
+width / height, 0.01, 100);
+const renderer = new THREE.WebGLRenderer({ 
+    alpha: true, antialias: true });
+renderer.shadowMap.enabled = true;
+renderer.shadowMapSoft = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+        </pre>
+        <p>The last three lines enable the soft shadow map on the renderer (as opposed to the hard shadow map which is
+            default and not so pretty). This enables real-time shadows in the scene for lights and objects that are set
+            up to cast shadows.</p>
+
+        <h3>Step 2: Add lighting</h3>
+        <p>ThreeJs has several types of lights (and cameras) each with their own features. A simple AmbientLight would
+            suffice for a basic scene, but this does not cast shadows. For this reason I went with a SpotLight, which
+            does.</p>
+        <pre class="prettyprint">
+const spotLight = new THREE.SpotLight(0xffffff, 2 );
+spotLight.position.set( -10, 150, -10 );
+scene.add( spotLight );
+        </pre>
+        <p>Using a camera helper and the OrbitControls helper is invaluable in testing and debugging anything to do
+            with ThreeJs.</p>
+        <p>Setting up the lights and camera just right so they focus on the right part of the scene at the right
+            distance and angle can be tedious without them.</p>
+
+        <h3>Step 3: Add the sphere and a floor below it to receive shadows</h3>
+        <pre class="prettyprint">
+const sphere = new THREE.Mesh(
+    new THREE.SphereGeometry(sphereRadius, 64, 64),
+    new THREE.MeshPhongMaterial({ color: 0xffffff })
+);
+sphere.castShadow = true;
+sphere.receiveShadow = true;
+scene.add(sphere);
+
+const floorGeometry = 
+    new THREE.PlaneBufferGeometry(1000, 1000);
+const floor = new THREE.Mesh(floorGeometry,
+    new THREE.MeshPhongMaterial({ color: 0xffffff })
+);
+// Move floor into position
+floor.position.y = -sphereRadius;
+floor.rotation.x = Math.PI / - 2;
+floor.castShadow = false;
+floor.receiveShadow = true;
+scene.add(floor);
+        </pre>
+        <p>This adds the sphere and a floor, and then translates and rotates the floor into position beneath the
+            sphere, ready to catch the sphere's shadows.</p>
+        <p>The objects consists of a geometry, with geomethry-specific features - number of sides and faces; and a
+            material which describes its appearance. This is a solid colour for now.</p>
+
+        <h3>Step 4: Replace the solid colour material with a webcam feed</h3>
+        <pre class="prettyprint">
+var videoImage = document.getElementById('videoImage');
+videoImageContext = videoImage.getContext('2d');
+videoImageContext.fillRect(0, 0, 
+    videoImage.width, videoImage.height);
+
+var videoTextureM = new THREE.Texture(videoImage);
+        </pre>
+        <p>This gets the webcam feed, renders it to a canvas, and then creates a ThreeJS texture from the canvas, ready
+            to apply onto the sphere replacing the solid colour texture.</p>
+        <h3>Step 5: Use Shaders to create a pencil sketch effect</h3>
+        <p>A fragment shader (aka Pixel shader) takes an input pixel (represented by an RGBA colour value), applies some processing on it, and outputs another RGBA value which may be used by the renderer to represent the final pixel on the screen.</p>
+
+        <p>This is based on an awesome shader from user Starea on Shadertoy: <a href="https://www.shadertoy.com/view/ldSyzV">Sketchy Stippling Stylization</a></p>
+        <pre class="prettyprint">
+// It takes each pixel
+vec3 col = texture2D(webcam, vUv).rgb;
+
+// Applies a random blur to it
+vec2 r = random(vUv);
+vec3 blurred = 
+    texture2D(webcam, vUv + cr * (vec2(44.0) / 1000.0) ).rgb;
+
+// Does a colour dodge over the original image, 
+// merging the blur over the original drawImage
+// This retains the sharp edges of the original 
+// image along with the blurred edges of the blur layer
+vec3 inv = vec3(1.0) - blurred;
+vec3 lighten = colorDodge(col, inv); 
+
+// Converts to greyscale
+vec3 gcol = vec3(greyScale(lighten));
+
+// And outputs to screen
+gl_FragColor = vec4(gcol, 1.0);
+        </pre>
+
+        <p>Fragment shaders are a fascinating subject, and too complicated to go into detail here.</p>\
+        <p><a href="https://pixelshaders.com">Pixelshaders.com</a> is an incredible resource to get started with shader programming, explaining the basics for beginners.</p>
+        <p><a href="https://shadertoy.com">And Shadertoy</a> provides many shaders to play with, you can edit them right in the browser.</a></p>
+
+        <h3>Step 6: Use the phone gyroscope to move the lights as you move your phone</h3>
+        <p>The shadow below looks more realistic if it moves along with your phone. Making this happen is as simple as getting the angle of rotation from the phone gyroscope and moving the light appropriately.</p>
+<pre class="prettyprint">
+window.addEventListener("deviceorientation", function (event) {
+    // Move the light to match the position of gravity
+    spotLight.position.x = event.gamma / 3;               
+}, true);
+</pre>
+
+        <p>And this creates the final effect of the reflecting sphere.</p>
+        <p>This post covers the important bits of code, but a lot of what is needed to get this project to run has been left out.</p>
+        <p>View the source of this webpage for the full working code.</p>
+
+        <video autoplay="true" id="videoElement" style="display: none"></video>
+        <canvas height="1000" width="1000" id="videoImage" style="display:none"></canvas>
+        <canvas height="320" width="240" id="headTracker" style="display:none"></canvas>
+        <script>
+            const width = Math.min(window.innerWidth, window.innerHeight);
+            const height = width;
+            const sphereRadius = 0.54;
+
+            const video = document.querySelector("#videoElement");
+            const scene = new THREE.Scene();
+            const camera = new THREE.PerspectiveCamera(45, width / height, 0.01, 100);
+            camera.position.z = 2.9 * sphereRadius;
+            camera.position.y = 1.5 * sphereRadius;
+            camera.lookAt(new THREE.Vector3(0, 0, 0));
+
+            const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
+            // TODO change on window resize
+            renderer.setSize(width, height);
+            renderer.shadowMap.enabled = true;
+            renderer.shadowMapSoft = true;
+            renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+
+            const spotLight = new THREE.SpotLight(0xffffff, 2);
+            spotLight.position.set(-10, 150, -10);
+            spotLight.penumbra = 0;
+            spotLight.decay = 1;
+            spotLight.distance = 1700;
+            spotLight.castShadow = true;
+            spotLight.shadow.bias = 0.001;
+            spotLight.shadow.radius = 1;
+            spotLight.shadow.mapSize.width = 4096;
+            spotLight.shadow.mapSize.height = 4096;
+
+            scene.add(spotLight);
+
+
+            if (navigator.mediaDevices.getUserMedia) {
+                navigator.mediaDevices.getUserMedia({ video: true })
+                    .then(function (stream) {
+                        video.srcObject = stream;
+                    })
+                    .catch(function (err) {
+                        //alert(err)
+                    });
+            }
+
+            const videoImage = document.getElementById('videoImage');
+            videoImageContext = videoImage.getContext('2d');
+            // background color if no video present
+            videoImageContext.fillStyle = '#fffff8';
+            videoImageContext.fillRect(0, 0, videoImage.width, videoImage.height);
+            videoImageContext.scale(0.5, 1);
+            const videoTextureM = new THREE.Texture(videoImage);
+            videoTextureM.minFilter = THREE.LinearFilter;
+            videoTextureM.magFilter = THREE.LinearFilter;
+            videoTextureM.wrapS = THREE.ClampToEdgeWrapping;
+            videoTextureM.wrapT = THREE.ClampToEdgeWrapping;
+
+
+            var movieMaterial = new THREE.ShaderMaterial({
+                uniforms: {
+                    "webcam": { type: 't', value: videoTextureM }
+                },
+                fragmentShader:
+                    `uniform sampler2D webcam;
+varying vec2 vUv;
+
+float greyScale(in vec3 col) 
+{
+    return dot(col, vec3(0.1, 0.68, 0.1));
+}
+
+vec3 colorDodge(in vec3 src, in vec3 dst)
+{
+    return step(0.0, dst) * mix(min(vec3(1.0), dst/ (1.0 - src)), vec3(1.0), step(1.0, src)); 
+}
+
+vec2 random(vec2 p){
+	p = fract(p * (vec2(314.159, 314.265)));
+    p += dot(p, p.yx + 17.17);
+    return fract((p.xx + p.yx) * p.xy);
+}
+
+void main()
+{
+    vec3 col = texture2D(webcam, vUv).rgb;
+    
+    vec2 r = random(vUv);
+    r.x *= 6.283185307179586;
+    vec2 cr = vec2(sin(r.x),cos(r.x))*sqrt(r.y);
+    
+    vec3 blurred = texture2D(webcam, vUv + cr * (vec2(44.0) / 1000.0) ).rgb;
+    
+    vec3 inv = vec3(1.0) - blurred; 
+    
+    vec3 lighten = colorDodge(col, inv); 
+    
+	vec3 gcol = vec3(greyScale(lighten));
+    
+    gcol = vec3(pow(gcol.x, 3.0)); 
+
+    // Output to screen
+    gl_FragColor = vec4(gcol, 1.0);
+}
+`,
+                vertexShader:
+                    `varying vec2 vUv;
+void main() {
+    vUv = uv;
+        gl_Position = projectionMatrix * modelViewMatrix * vec4(position.x, position.y, position.z, 1.0);
+    }`,
+            });
+
+            var sphere1 = new THREE.Mesh(
+                new THREE.SphereGeometry(sphereRadius, 64, 64),
+                movieMaterial
+            );
+            sphere1.castShadow = false;
+            sphere1.receiveShadow = false;
+            scene.add(sphere1);
+            sphere1.position.y = 0.10;
+            /* The ball */
+            const shadowMaterial = new THREE.ShadowMaterial();
+            shadowMaterial.opacity = 0.5;
+            shadowMaterial.dithering = true;
+            shadowMaterial.ditheringshadowSide = THREE.DoubleSide;
+            var sphere = new THREE.Mesh(
+                new THREE.SphereGeometry(sphereRadius, 64, 64),
+                shadowMaterial
+            );
+            sphere.castShadow = true;
+            sphere.receiveShadow = true;
+            sphere.position.y = 0.1;
+            scene.add(sphere);
+
+            var floorGeometry = new THREE.PlaneBufferGeometry(1000, 1000);
+            var floor = new THREE.Mesh(floorGeometry,
+                new THREE.MeshPhongMaterial({ color: 0xfffff8 })
+            );
+
+            floor.position.y = -sphereRadius;
+            floor.position.x = 0;
+            floor.position.z = 0;
+            floor.rotation.x = Math.PI / - 2;
+            floor.castShadow = false;
+            floor.receiveShadow = true;
+            scene.add(floor);
+
+            scene.background = new THREE.Color(0xfffff8);
+            document.querySelector('#balls').appendChild(renderer.domElement);
+            render();
+
+            function render() {
+                if (video.readyState === video.HAVE_ENOUGH_DATA) {
+                    videoImageContext.clearRect(0, 0, videoImage.width, videoImage.height)
+                    videoImageContext.drawImage(video, x, y, w, h);
+                    if (videoTextureM)
+                        videoTextureM.needsUpdate = true;
+                }
+                requestAnimationFrame(render);
+                renderer.render(scene, camera);
+            }
+
+            window.addEventListener("deviceorientation", function (event) {
+
+                // alpha: rotation around z-axis
+                var rotateDegrees = event.alpha; //0 to 360
+                // gamma: left to right
+                var leftToRight = event.gamma; //-90 to +90
+                // beta: front back motion
+                var frontToBack = event.beta; //-180 to +180
+
+                // Move the light to match the position of gravity
+                spotLight.position.x = event.gamma / 3;               
+            }, true);
+        </script>
+    </article>
+    <footer><a href="/">&laquo;Back to homepage</a> <span>&copy; 2018, Varun Naik</span></footer>
+</body>
+
+</html>
