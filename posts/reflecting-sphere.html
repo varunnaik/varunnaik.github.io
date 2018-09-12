@@ -22,6 +22,14 @@
             padding-top: 20px;
             line-height: 1.5;
         }
+        #balls {
+            max-width: 100vw;
+        }
+        @media screen and (max-width: 400px) {
+            #balls {
+                margin-left: -30px;
+            }
+        }
     </style>
 </head>
 
@@ -37,7 +45,7 @@
             and a phone camera.</p>
 
 
-        <p>First, the result: A sphere that reflects the webcam image.</p>
+        <p>First, the result: A sphere that reflects the image from your webcam.</p>
 
         <div id="balls"></div>
 
@@ -141,7 +149,7 @@ vec3 gcol = vec3(greyScale(lighten));
 gl_FragColor = vec4(gcol, 1.0);
         </pre>
 
-        <p>Fragment shaders are a fascinating subject, and too complicated to go into detail here.</p>\
+        <p>Fragment shaders are a fascinating subject, and too complicated to go into detail here.</p>
         <p><a href="https://pixelshaders.com">Pixelshaders.com</a> is an incredible resource to get started with shader programming, explaining the basics for beginners.</p>
         <p><a href="https://shadertoy.com">And Shadertoy</a> provides many shaders to play with, you can edit them right in the browser.</a></p>
 
@@ -222,53 +230,53 @@ window.addEventListener("deviceorientation", function (event) {
                     "webcam": { type: 't', value: videoTextureM }
                 },
                 fragmentShader:
-                    `uniform sampler2D webcam;
-varying vec2 vUv;
+                   `uniform sampler2D webcam;
+                    varying vec2 vUv;
 
-float greyScale(in vec3 col) 
-{
-    return dot(col, vec3(0.1, 0.68, 0.1));
-}
+                    float greyScale(in vec3 col) 
+                    {
+                        return dot(col, vec3(0.1, 0.68, 0.1));
+                    }
 
-vec3 colorDodge(in vec3 src, in vec3 dst)
-{
-    return step(0.0, dst) * mix(min(vec3(1.0), dst/ (1.0 - src)), vec3(1.0), step(1.0, src)); 
-}
+                    vec3 colorDodge(in vec3 src, in vec3 dst)
+                    {
+                        return step(0.0, dst) * mix(min(vec3(1.0), dst/ (1.0 - src)), vec3(1.0), step(1.0, src)); 
+                    }
 
-vec2 random(vec2 p){
-	p = fract(p * (vec2(314.159, 314.265)));
-    p += dot(p, p.yx + 17.17);
-    return fract((p.xx + p.yx) * p.xy);
-}
+                    vec2 random(vec2 p){
+                        p = fract(p * (vec2(314.159, 314.265)));
+                        p += dot(p, p.yx + 17.17);
+                        return fract((p.xx + p.yx) * p.xy);
+                    }
 
-void main()
-{
-    vec3 col = texture2D(webcam, vUv).rgb;
-    
-    vec2 r = random(vUv);
-    r.x *= 6.283185307179586;
-    vec2 cr = vec2(sin(r.x),cos(r.x))*sqrt(r.y);
-    
-    vec3 blurred = texture2D(webcam, vUv + cr * (vec2(44.0) / 1000.0) ).rgb;
-    
-    vec3 inv = vec3(1.0) - blurred; 
-    
-    vec3 lighten = colorDodge(col, inv); 
-    
-	vec3 gcol = vec3(greyScale(lighten));
-    
-    gcol = vec3(pow(gcol.x, 3.0)); 
+                    void main()
+                    {
+                        vec3 col = texture2D(webcam, vUv).rgb;
+                        
+                        vec2 r = random(vUv);
+                        r.x *= 6.283185307179586;
+                        vec2 cr = vec2(sin(r.x),cos(r.x))*sqrt(r.y);
+                        
+                        vec3 blurred = texture2D(webcam, vUv + cr * (vec2(44.0) / 1000.0) ).rgb;
+                        
+                        vec3 inv = vec3(1.0) - blurred; 
+                        
+                        vec3 lighten = colorDodge(col, inv); 
+                        
+                        vec3 gcol = vec3(greyScale(lighten));
+                        
+                        gcol = vec3(pow(gcol.x, 3.0)); 
 
-    // Output to screen
-    gl_FragColor = vec4(gcol, 1.0);
-}
-`,
+                        // Output to screen
+                        gl_FragColor = vec4(gcol, 1.0);
+                    }
+                    `,
                 vertexShader:
-                    `varying vec2 vUv;
-void main() {
-    vUv = uv;
-        gl_Position = projectionMatrix * modelViewMatrix * vec4(position.x, position.y, position.z, 1.0);
-    }`,
+                   `varying vec2 vUv;
+                    void main() {
+                        vUv = uv;
+                            gl_Position = projectionMatrix * modelViewMatrix * vec4(position.x, position.y, position.z, 1.0);
+                        }`,
             });
 
             var sphere1 = new THREE.Mesh(
