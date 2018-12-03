@@ -49,7 +49,7 @@
     <p>The runtime spec defines how to run a filesystem bundle unpacked on the disk. It defines the configuration files, root filesystem, and other conventions.</p>
 
     <h3>runC</h3>
-    <p>runC is the reference container runtime developed by OCI. This allows for spawning and running containers, and interacting with containers - as long as they are built according to the OCI runtime-spec as described above. runC deals with low level Linux capabilities like cgroups, namespaces, and the like. A runC instance is created to spawn each container, and once spawned it exits. In the case of Docker, containerd-shim to handles the actual running of the container once runC has started it.</p>
+    <p>runC is the reference container runtime developed by OCI. This allows for spawning and running containers, and interacting with containers - as long as they are built according to the OCI runtime-spec as described above. runC deals with low level Linux capabilities like cgroups, namespaces, and the like. A runC instance is created to spawn each container, and once spawned it exits. In the case of Docker, containerd-shim handles the actual running of the container once runC has started it.</p>
 
     <p>Note that given an OCI runtime-spec compliant filesystem bundle, runc is all you need to run it - you don't need dockerd, docker, or containerd. Of course, this also means managing the whole system yourself.</p>
 
@@ -108,7 +108,7 @@
         <li>Easily manage volumes and mounted filesystems</li>
     </ol>
 
-    <p>The most popular MicroVMs include:</p>
+    <p>The best supported MicroVMs include:</p>
     <h3>Firecracker</h3>
 
     <p><a href="https://github.com/firecracker-microvm/firecracker/blob/master/docs/design.md">Firecracker</a> was released as open source by AWS in November 2018, and is what powers AWS Lambda and AWS Fargate. It is a lightweight VM that approaches a container in terms of performance while also providing mechanisms to limit resources and provides better security guarantees.</p>
