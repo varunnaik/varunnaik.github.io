@@ -1,0 +1,156 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Containers and Virtualization</title>
+  <link rel="canonical" href="https://blog.vnaik.com/">
+  <meta name="viewport" content="width=device-width,minimum-scale=1,initial-scale=1">
+  <link rel="icon" href="https://blog.vnaik.com/favicon.ico" type="image/x-icon">
+  <link rel="stylesheet" href="../tufte.css"/>
+  <link rel="stylesheet" href="../style.css" />
+  <style>
+  h3{
+      font-weight: bold;
+      font-style: normal;
+  }
+</style>
+</head>
+<body>
+  <h2><a href="/">Vnaik.com</a></h2>
+<article>
+
+    <h1>Containers and Virtualization</h1>
+    <h2>November 2018</h2>
+
+    <p>This post looks at the container and virtualization landscape as of 2018 - year in which containerization, either directly through Docker or Kubernetes, or indirectly through AWS Lambda and the like, has skyrocketed in popularity.</p>
+
+    <p>Containers provide isolation, well-defined communication channels for security, and a convenient way to package an application (i.e., a set of binaries, libraries, and script source code files) along with its dependencies (eg. a set of modules and operating system packages and config files). This makes for a reliable unit that you can count on to work, even years into the future when the software in the container is out of date and unmaintaned. The software may be insecure and buggy but at least it can be counted on to work.</p>
+
+    <p>Unlike a virtual machine, one thing containers do not <em>guarantee</em> is security. In particular, if attempting to run untrusted code in a container, it cannot provide good security guarantees or effective handling of resource (mis)-utilization. An 'untrusted' script for this article is anything from a third party, AWS Lambda or Google Cloud Functions routinely run untrusted code, and do it safely.</p>
+
+    <p>Containers also do not provide a good management interface (eg. to change memory limits or number of virtual CPUs) which is crucial for long-running code in containers, eg. servers.</p>
+
+    <p>Lightweight VMs attempt to bridge this gap by providing fast and stripped down virtual machines that are easy to use and secure.</p>
+
+    <p>Before proceeding, it may be helpful to see a technology review of common virtualization technology. Skip this section and proceed directly to <a href="#lightweight-vms">Lightweight VMs</a> if you're already familiar with these terms.</p>
+    <br />
+    <hr />
+    <h2 id="technology-overview-containers">Technology Overview - Containers</h2>
+
+    <h3>Docker</h3>
+    <p>The project that first popularised the container concept.</p>
+
+    <h3>Kubernetes</h3>
+    <p>Google's container orchestration system to automate the deployment, scaling, and management of containerised applications. This works with Docker contaieners or other containers. Docker Swarm is another example of an orchestration system.</p>
+
+    <h3>OCI Initiative</h3>
+    <p>The Open Container Initiative is an effort to create open standards for container formats and runtime, and is backed by the Linux Foundation. OCI has produced an image-spec for definining container image formats, as well as a runtime format for defining the runtime. The idea is that any OCI compliant container would work with any OCI compliant runtime.</p>
+
+    <p>The runtime spec defines how to run a filesystem bundle unpacked on the disk. It defines the configuration files, root filesystem, and other conventions.</p>
+
+    <h3>runC</h3>
+    <p>runC is the reference container runtime developed by OCI. This allows for spawning and running containers, and interacting with containers - as long as they are built according to the OCI runtime-spec as described above. runC deals with low level Linux capabilities like cgroups, namespaces, and the like. A runC instance is created to spawn each container, and once spawned it exits. In the case of Docker, containerd-shim to handles the actual running of the container once runC has started it.</p>
+
+    <p>Note that given an OCI runtime-spec compliant filesystem bundle, runc is all you need to run it - you don't need dockerd, docker, or containerd. Of course, this also means managing the whole system yourself.</p>
+
+    <h3>Containerd</h3>
+    <p>This is a higher-level daemon that controls runc, and manages the container lifecyle for the host - from image transfer and storage to container execution and storage. It manages networking for containers, pushing and pulling images (but not creating them, that falls to Dockerd), and execution. It exposes gRPC endpoints.</p>
+    <figure class="fullwidth">
+      <img src="./img/containerd.png" alt="Containerd components and capabilities" /><br />
+      <label>Containerd's place in the container ecosystem</label>
+    </figure>
+
+    <h3>Dockerd</h3>
+    <p>This is the highest level component of the system, as illustrated below. This provides the ux features of Docker. It allows for building images, volume management, and logging.</p>
+      <img src="./img/docker-components.png" alt="The relationship between Docker daemon, containerd, runc, container-shim and the container" /><br />
+      <label>The relationship between components in the Docker ecosystem</label>
+    </figure>
+    <br /><br />
+    <hr />
+
+    <h2 id="technology-overview-virtualization">Technology Overview - Virtualization</h2>
+    <h3>Hypervisor</h3>
+    <p>This is what creates and runs virtual machines. They can be native (running directly on the host's hardware) or hosted (running on a conventional operating system, eg. VirtualBox/QEMU).</p>
+
+    <h3>Guest and Host</h3>
+    <p>The guest is the operating system being emulated, and the host is the operating system that provides the virtualization.</p>
+
+    <h3>KVM</h3>
+    <p>KVM is a hypervisor project implemented as a Linux kernel module. It turns a host Linux system into a native hypervisor.</p>
+
+    <h3>Xen</h3>
+    <p>A native hypervisor that runs as a host operating system.</p>
+
+    <h3>QEMU</h3>
+    <p>QEMU is a hosted hypervisor (i.e., unlike a native hypervisor it runs on top of a host operating system). It is a full system emulator that can emulate differnt CPUs and hardware, using binary translation to convert opcodes from the guest to the host. It can also model hardware devices in software to provide a virtual environment. Of course, since this is all done in software, emulation is extremely slow. This makes it possible, for example, to run ARM software on an AMD machine.</p>
+
+    <p>However, if KVM is available QEMU can make use of it to run at near native speed.</p>
+
+    <h3>KVMTool</h3>
+
+    <p>This is a more lightweight, stripped, and focussed qemu alternative that only supports running Linux machines on Linux hosts with both vm and host running the same architecture. It should be more performant than QEMU.</p>
+
+    <h3>Libguestfs</h3>
+    <p><a href="http://libguestfs.org/">Libguestfs</a> is a set of tools that allow you to access and modify virtual machine disk images.</p>
+
+    <hr />
+
+    <h2 id="lightweight-vms">Lightweight VMs</h2>
+
+    <p>Lightweight VMs are stripped down virtual machines with an emphasis on management and speed.</p>
+
+    <p>Most lightweight VMs do not have the ease of use of Docker. For example, Docker allows one to:</p>
+    <ol>
+        <li>Easily open a shell into a running container</li>
+        <li>Edit mounted files from outside the container</li>
+        <li>Build and develop easily with a Dockerfile</li>
+        <li>Add in custom components at build time (maybe compile custom software in the Dockerfile)</li>
+        <li>Easily manage volumes and mounted filesystems</li>
+    </ol>
+
+    <p>The most popular MicroVMs include:</p>
+    <h3>Firecracker</h3>
+
+    <p><a href="https://github.com/firecracker-microvm/firecracker/blob/master/docs/design.md">Firecracker</a> was released as open source by AWS in November 2018, and is what powers AWS Lambda and AWS Fargate. It is a lightweight VM that approaches a container in terms of performance while also providing mechanisms to limit resources and provides better security guarantees.</p>
+
+    <p>However, this is considerably complicated to set up and run. It is nothing like the Dockerfile in terms of ease of use, we will likely have to package our own disk image for use with this product, as well as a separate kernel to boot with. Tooling is likely to develop over the coming months.</p>
+
+    <p>It provides a management API over REST, allowing you to set memory limits, virtual CPU count, etc. on the fly.</p>
+
+    <p>This is a complete solution that works directly with KVM.</p>
+
+    <p>This provides excellent security, is very fast, and provides a useful and fine-grained management API. However, it is exceedingly hard to use - without the convenience of something like Dockerd to simplify creating and running images, you are left to manage the filesystem images and kernel yourself - you need an ext4 filesystem image to boot the vm.</p>
+
+    <h3>Kata Containers</h3>
+
+    <p>This is about two years old, but has lately become very polished and very compelling. Note that setting this up and running it is a considerable commitment - this is not a simple project to manage and run.</p>
+
+    <p>This combines Intel ClearContainers (which is comparable to Docker) with runV (described below).</p>
+
+    <p>With all components (kata-agent, kata-runtime, etc.) this is a complete solution that works with KVM or Xen and even Qemu without KVM if necessary.</p>
+
+    <p>Kata provides excellent security, is very fast, and works with OCI compliant images like Docker images. However, it is not very easy to use, and does not provide a management API like Firecracker does.</p>
+
+    <h3>gVisor</h3>
+
+    <p><a href="https://github.com/google/gvisor">gVisor</a> is is a sandbox that runs in userspace. It is a userspace kernel that implements a substantial portion of the Linux system surface. The sandbox sits between the container (eg. Docker) and the host operating system to provide better security. This limits the host kernel surface available to the container while intercepting all system calls made by the container.</p>
+
+    <p>This is easy to use, works with Docker images. However, not all dockerised applications are guaranteed to work, and has no management API</p>
+
+    <h3>runV</h3>
+
+    <p>Like runC, runV is a container runtime. Unline runC, runV uses virtualization when running containers. This allows you to run OCI containers (eg. <a href="https://blog.hyper.sh/runv-bring-isolation-to-docker.html">Docker containers</a>) as virtual machines - af. It requires either QEMU/KVM, Kvmtool/KVM, or Xen.</p>
+
+    <p>This provides excellent security, is very fast, and works with Docker images - but it has no management API, and is not well supported (Kata runtime seems to have more interest)</p>
+
+    <hr />
+
+    <p>That concludes the overview of containers and virtualization, and it is likely more good tools will become available in 2019 particularly around Firecracker and Kata, so this will be an interesting space to watch.</p>
+
+</article>
+    
+
+
+<footer><a href="/">&laquo;Back to homepage</a> <span>&copy; 2018, Varun Naik</span></footer>
+</body>
+</html>
