@@ -11,7 +11,9 @@
 </head>
 <body>
   <h2><a href="/">Vnaik.com</a></h2>
+  <article>
     <h1>Package Managers and Security</h1>
+    <h2>October 2017</h2>
     <hr />
 <div class="level2">
 <p>
@@ -101,14 +103,16 @@ If a hacker detects a vulnerability in one package every single webapp on the In
     <li>Do not allow any automatic package updates. Instead carefully plan and manage updates manually</li>
     <li>Maintaining a local package cache may help but is hard to maintain</li>
     <li>Package audit tools like <a href="https://github.com/nodesecurity/nsp" class="urlextern" title="https://github.com/nodesecurity/nsp" rel="nofollow">Nsp</a> or <a href="https://github.com/rubysec/bundler-audit" class="urlextern" title="https://github.com/rubysec/bundler-audit" rel="nofollow">Bundler-audit</a> can help; and if you use Github it can automaticall audit npm packages for you</li>
-    <li>Tools such as <a href="https://libraries.io/" class="urlextern" title="https://libraries.io/" rel="nofollow">libraries.io/</a> can help you maintain your package lists</li>
+    <li>Tools such as <a href="https://dependabot.com/" class="urlextern" title="Dependabot" rel="nofollow">Dependabot</a> can help you maintain your project dependencies</li>
+    <li>It is important to have a smooth deployment process - so security fixes and package updates can be applied quickly and with minimal effort wherever possible, and ideally this can be done out-of-band from regular deployment schedules.</li>
   </ul>
 
 <p><strong>Edit:</strong> Since this post was written npm has released an <a href="https://docs.npmjs.com/cli/audit">audit tool</a> which can scan all packages in your package-lock.json and inform you of potential security issues.</p>
 <p>Minimising package dependencies is still probably a very good idea.</p>
+<p>In addition, as of 2019, Github can now scan certain projects (eg. Node and Python) for vulnerabilities on push to origin and advise on updating the packages. With Github's <a href="https://dependabot.com/blog/hello-github/">acquisition of Dependabot</a> you can now have automatic pull requests created for out-of-date packages.</p>
 
 </div>
-
+</article>
 <hr />
 <footer>
   <h3>Footnotes</h3>
@@ -121,7 +125,6 @@ If a hacker detects a vulnerability in one package every single webapp on the In
 <p id="link-7">[7]: <a href="https://a9t9.com/blog/chrome-extension-adware/">Our Copyfish extension was stolen and adware-infested</a></p>
 <p id="link-8">[8]: <a href="https://www.zdnet.com/article/zero-day-in-popular-jquery-plugin-actively-exploited-for-at-least-three-years/">Zero-day in popular jQuery plugin actively exploited for at least three years</a></p>
 </ul>
-
 <a href="/">&laquo;Back to homepage</a> <span>&copy; 2018, Varun Naik</span></footer>
 </body>
 </html>
