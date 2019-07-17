@@ -13,8 +13,9 @@
   <h2><a href="/">Vnaik.com</a></h2>
 <article>
 
-	<h1>Web attacks and Mitigations</h1>
-	<p>With an increasing number of breaches, intrusions, and data thefts, securing a web application is extremely important. This post looks at some particularly common attacks and their mitigations.</p>
+	<h1>CSRF, CORS, and other Security Tech Demystified</h1>
+	<p>With an increasing number of breaches, intrusions, and data thefts, securing a web application is extremely important.</p>
+	<p>On the other hand, programmers often do not have a strong grasp of how attacks work and how to mitigate them. This post attempts to close that gap a little.</p>
 	<h2 id="csrf">CSRF</h2>
 	<p><em>Cross-Site Request Forgery</em> is an attack where a third party forces a user to execute actions against a site where they are currently logged in.</p>
 	<p>Here is an example illustrating how this works:</p>
@@ -32,9 +33,9 @@
 	<p>CSRF protection support needs to be added to your application code and cannot be added at the proxy server layer (eg. in Nginx).
 	<a href="https://github.com/OWASP/CheatSheetSeries/blob/master/cheatsheets/Cross-Site_Request_Forgery_Prevention_Cheat_Sheet.md">A detailed look at CSRF from OWASP</a></p>
 	<h2 id="cors">CORS</h2>
-	<p><em>Cross-Origin Request Sharing</em> only applies in a browser context and is a security mechanism to allow one origin to make a request to another origin. All browsers follow the Single Origin Policy, but if the server provides properly configured CORS headers this policy can be selectively relaxed and thus CORS is a way of selectively loosening security and not of tightening it.</p>
-	<p>When a website makes an XHR request to another origin, the browser initiates a preflight OPTIONS request first - and the original request is only made if the server responds to this preflight with a list of allowed origins containing the origin of the website.</p>
-	<p>Note that CORS preflight requests are not made for GET HEAD POST reqests with default headers as these might be legimitate requests, eg. from a form action or an img tag.</p>
+	<p><em>Cross-Origin Request Sharing</em> only applies in a browser context and is a security mechanism to allow one origin to make a request to another origin. All browsers follow the Single Origin Policy, meaning by default scripts cannot make requests to other origins - but if the server provides properly configured CORS headers this policy can be selectively relaxed. Thus CORS is a way of selectively loosening security and not of tightening it.</p>
+	<p>When a website makes an XHR request to another origin, the browser initiates a preflight OPTIONS request first - and the original request is only made if the server responds to this preflight with a list of allowed origins, and this list contains the origin of the current page.</p>
+	<p>Note that CORS preflight requests are not made for GET HEAD POST reqests with default headers.</p>
 	<p>Some key headers sent as a response to an OPTIONS request:</p>
 		<ul>
 		<li><em>access-control-allow-credentials</em>: If set, cookies are sent by the browser</li>
@@ -56,9 +57,9 @@
 	<p>The difference from CORS is that CORS prevents a third party from accessing a server, while CSP prevents a website itself from loading content from a third party, as a defense against XSS.</p>
 	<p>CSP is not a silver bullet against XSS but it helps. Ultimately XSS needs to be prevented with careful application design and effective user input sanitisation, both on the frontend and the backend. The <a href="https://content-security-policy.com/">Content Security Polict web site</a> describes how to add CSP support to your webserver.</p>
 	<h2 id="hsts">HSTS</h2>
-	<p><em>HTTP Strict Transport Security</em> protects against protocol downgrade attacks and cookie hijacking by allowing a server to declare that browsers should only interact with it using HTTPS connections and never HTTP; and the browser should always convert all attempts to access the site using HTTP to HTTPS instead.</p>
+	<p><em>HTTP Strict Transport Security</em> protects against protocol downgrade attacks and cookie hijacking by allowing a server to declare that browsers should only interact with it using HTTPS connections and never HTTP; and the browser should always convert all attempts to access the site using HTTP to HTTPS instead, eg. by rewriting all links to use HTTPS instead of HTTP.</p>
 	<p>This guards against eavesdropping and man-in-the-middle attacks that work by transparently converting a https connection into plain http.</p>
-	<p>For example, you might connect to a free wifi service at the airport to access your bank website, but the access point is actually a hacker&#39;s laptop that performs a MITM attack and redirects you to a clone of the bank&#39;s site. HSTS provides security in this scenario as long as you have accessed your bank&#39;s web site at least one over HTTPS (and the bank uses HSTS), the browser will reject this request outright. This page has details on <a href="https://www.nginx.com/blog/http-strict-transport-security-hsts-and-nginx/">configuring HSTS for Nginx</a>.</p>
+	<p>For example, you might connect to a free wifi service at the airport to access your bank website, but the access point is actually a hacker&#39;s laptop that performs a MITM attack and redirects you to a clone of the bank&#39;s site. HSTS provides security in this scenario as long as you have accessed your bank&#39;s web site at least one over HTTPS (and the bank uses HSTS), the browser will reject this request outright.</p><p>This page has details on <a href="https://www.nginx.com/blog/http-strict-transport-security-hsts-and-nginx/">configuring HSTS for Nginx</a>.</p>
 	<h2 id="hpkp">HPKP</h2>
 	<p><em>HTTP Public Key Pinning</em> allows HTTPS websites to resist impersonation using fradulently obtained SSL certificates by providing the browser a set of public keys which are the only ones to be trusted for future connections to the same origin.</p>
 	<p>This provides security against a compromised certificate authority as has happened in the past with Comodo.</p>
