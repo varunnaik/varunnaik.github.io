@@ -24,7 +24,7 @@
 
     <p>This post looks at the container and virtualization landscape as of 2018 - a year in which containerization, either directly through Docker or Kubernetes, or indirectly through AWS Lambda and the like, has skyrocketed in popularity.</p>
 
-    <p>Containers provide isolation, well-defined communication channels for security, and a convenient way to package an application (i.e., a set of binaries, libraries, and script source code files) along with its dependencies (eg. a set of modules and operating system packages and config files). This makes for a reliable unit that you can count on to work, even years into the future when the software in the container is out of date and unmaintaned. The software may be insecure and buggy but at least it can be counted on to work.</p>
+    <p>Containers provide isolation, well-defined communication channels for security, and a convenient way to package an application (i.e., a set of binaries, libraries, and script source code files) along with its dependencies (eg. a set of modules and operating system packages and config files). This makes for a reliable unit that you can count on to work, even years into the future when the software in the container is out of date and unmaintained. The software may be insecure and buggy but at least it can be counted on to work.</p>
 
     <p>Unlike virtual machines, containers do not <em>guarantee</em> is security. In particular, when attempting to run untrusted code, containers typically do not provide security guarantees or on-the fly control of resource utilization. A single exploit could potentially result in a container breakout. An 'untrusted' script for this article is anything from a third party, AWS Lambda or Google Cloud Functions routinely run untrusted code, and do it safely.</p>
 
@@ -88,7 +88,7 @@
 
     <h3>KVMTool</h3>
 
-    <p>This is a more lightweight, stripped, and focussed qemu alternative that only supports running Linux machines on Linux hosts with both vm and host running the same architecture. It should be more performant than QEMU.</p>
+    <p>This is a more lightweight, stripped, and focused qemu alternative that only supports running Linux machines on Linux hosts with both vm and host running the same architecture. It should be more performant than QEMU.</p>
 
     <h3>Libguestfs</h3>
     <p><a href="http://libguestfs.org/">Libguestfs</a> is a set of tools that allow you to access and modify virtual machine disk images.</p>
@@ -139,7 +139,7 @@
 
     <h3>runV</h3>
 
-    <p>Like runC, runV is a container runtime. Unline runC, runV uses virtualization when running containers. This allows you to run OCI containers (eg. <a href="https://blog.hyper.sh/runv-bring-isolation-to-docker.html">Docker containers</a>) as virtual machines. It requires either QEMU/KVM, Kvmtool/KVM, or Xen.</p>
+    <p>Like runC, runV is a container runtime. Unlike runC, runV uses virtualization when running containers. This allows you to run OCI containers (eg. <a href="https://blog.hyper.sh/runv-bring-isolation-to-docker.html">Docker containers</a>) as virtual machines. It requires either QEMU/KVM, Kvmtool/KVM, or Xen.</p>
 
     <p>This provides excellent security, is very fast, and works with Docker images - but it has no management API, and is not well supported (Kata runtime seems to have more interest) and does not seem to work with current versions of the Docker engine.</p>
 
