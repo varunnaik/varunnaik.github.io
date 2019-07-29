@@ -60,7 +60,7 @@
 
     <p>Handling events scheduled to fall in the window of a daylight savings time switch over is trickier. For example, if Daylight Savings Time change happens at 1AM, then an event scheduled to run at 1:30AM every day will fail twice every year - not executing at all on the day of the first DST transition and executing twice on the day of the second DST transition. The best way to avoid this problem is to specifically check for this condition if necessary. Also different countries change to daylight savings time at different times of the day - some do it at midnight - 1AM others at 1AM - 2AM, and still others do it 2AM - 3AM.</p>
 
-    <p>Developing with these considerations can be tricky because things may seem to work fine during development and testing, and only fail months or years later when some unexpected time zone change occurs. Automated tests will potentially miss this kind of error unless tests were written with shifting time zones in mind. At the very least automatic tests should exercise the project through some daylight savings spring forwards and leap back.</p>
+    <p>Developing with these considerations can be tricky because things may seem to work fine during development and testing, and only fail months or years later when some unexpected time zone change occurs. Automated tests will potentially miss this kind of error unless tests were written with shifting time zones in mind. At the very least automatic tests should exercise the project through some daylight savings spring forwards and fall back.</p>
     <hr />
     <h3>Conclusions</h3>
     <p>If the application needs universal time and is not intended to be mapped back to local time then UTC is a very good fit. An example will be a task scheduler that schedules tasks every 24 hours irrespective of conventions such as holidays, time of day, etc. On the other hand, if the application needs to use local times (eg. for a calendar application, or to schedule future work) then it is best to store time strings and IANA time zone names and not UTC.</p>
@@ -71,9 +71,9 @@
     </ul>
     <p>It is also worth remembering the following points, this is mostly a concern for applications where sub-second accuracy is important.</p>
     <ul>
-        <li>The system clock can jump forwards and backwards in time, both due to leap seconds and because hardware goes out of sync over time and can be corrected by ntpd</li>        
+        <li>The system clock can jump forwards and backwards in time, both when adjusting for leap seconds and more commonly when the hardware clock goes out of sync (as it does over time) and gets corrected by ntpd</li>        
         <li>If sub-second accuracy is required TAI may be a better fit than UTC as it avoids the leap second jumps of UTC</li>
-        <li>Daylight Savings rules also change, countries sometimes postpone or cancel DST changes</li>
+        <li>Daylight Savings rules also change, countries sometimes postpone or cancel DST changes as one-offs</li>
     </ul>
     <h3>References</h3>
     <p id="link_1">1: <a href="https://www.washingtonpost.com/news/worldviews/wp/2015/08/07/north-koreas-new-time-zone-is-perfectly-bizarre/?noredirect=on">North Korea's new time zone is perfectly bizarre</a></p>
