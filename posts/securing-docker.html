@@ -1,0 +1,97 @@
+<!doctype html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <title>Securing Docker Containers</title>
+    <link rel="canonical" href="https://blog.vnaik.com/posts/securing-docker.html">
+    <meta name="viewport" content="width=device-width,minimum-scale=1,initial-scale=1">
+    <link rel="icon" href="https://blog.vnaik.com/favicon.ico" type="image/x-icon">
+    <link rel="stylesheet" href="../tufte.css" />
+    <link rel="stylesheet" href="../style.css" />    <script src="https://cdn.rawgit.com/google/code-prettify/master/loader/run_prettify.js"></script>
+
+    <style>
+        pre.prettyprint {
+            border: 0;
+            border-top: 1px #ccc solid;
+            border-bottom: 1px #ccc solid;
+            padding: 10px;
+            line-height: 1.5;
+            font-size: 1rem;
+        }
+    </style>
+</head>
+
+<body>
+    <h2>
+        <a href="/">Vnaik.com</a>
+    </h2>
+
+<article>
+    <h1>Securing Docker Containers</h1>
+    <hr />
+
+    <p>As Docker becomes more and more popular, the number of security exploits found is only likely to go up. It is quite important to configure a Docker container properly to prevent major security problems, yet this is not often done in practice. The following rules of thumb should help harden a Docker container and make it more secure in production.</p>
+    
+    <ol>
+        <li><p>Do not run Docker as root. If you are in the habit of prefixing docker commands with sudo, don't - especially avoid in production. Instead run containers as a regular user, this way any Docker exploits will at least run only with user privileges.</p>
+            
+        <p>Create a Docker group and add your user to it.</p>
+        <pre class="prettyprint lang-bash">
+    sudo groupadd docker
+    sudo usermod -aG docker $USER</pre> 
+            <p>And generally <a href="https://docs.docker.com/install/linux/linux-postinstall/">follow the steps on the Docker website</a>.</p></li>
+
+        <li>Processes inside the Docker should not be run as root, which is the default behaviour. The following lines at the top of your Dockerfile will ensure the application does not run as root:
+        <pre class="prettyprint lang-bash">
+    RUN groupadd --gid 9999 appuser && \
+    useradd --system --uid 9999 -g appuser --create-home appuser
+    WORKDIR /home/appuser
+    USER appuser</pre>
+        It is a good idea to assign a group and user id, otherwise subsequent builds will have ids assigned non-deterministically and the image is not fully reproducible.
+        </li>
+        <li>Reproducible DOCKERFILE: It is crucial for the purposes of creating reproducible builds of the Docker image, to specify exact versions - eg., 
+        <pre class="prettyprint lang-bash">
+            FROM python:3.7.3-alpine3.9</pre> as opposed to
+        <pre class="prettyprint lang-bash">
+            FROM python:3</pre>
+        The latter will get the latest Python docker at the time of build depending on the machine the command is run on, and could result in developers, qa, prod having sightly different versions of the Docker image.
+        </li>
+        <li>Reproducible Packages:This is a general rule that applies also outside the context of Docker. But individual packages inside the Docker - npm, pip, maven, and others alike - also need to be reproducible, and this means specifying exact versions. <a href="http://localhost:8080/posts/package-managers.html">Read more on why this is a good idea.</a></li>
+        <li>Do not inadvertently expose /var/run/docker.sock. This is the Docker Daemon socket and should be hidden from everything and especially anything inside the container. This socket file is the main API to control any of the docker containers running on that host and having write access to this is the same as having root access to the host. Many guides tell you to expose this - eg. to launch a docker container from within docker. <a href="https://www.lvh.io/posts/dont-expose-the-docker-socket-not-even-to-a-container/">This should be avoided.</a></li>
+
+        <li><a href="http://man7.org/linux/man-pages/man7/capabilities.7.html">Linux kernel capabilities</a> determine what a process can do - for example, to chown files or kill processes. These are selectively granted to a Docker container by the host operating system. <a href="https://docs.docker.com/v17.12/engine/security/security/#linux-kernel-capabilities">By default only a subset of commands are available</a>. The defaults are good for most use-cases, but for added security it is a good idea to drop all capabilities and add the ones you need back:
+        <pre class="prettyprint lang-bash">
+            --cap-drop all --cap-add CHOWN</pre>
+                 
+        <a href="https://docs.docker.com/engine/reference/run/#runtime-privilege-and-linux-capabilities">Docker capabilities reference for --cap-add</a>.
+        </li>
+        <li>Going off the above, the --privileged flag grants All capabilities. This is best avoided entirely.</li>
+
+        <li>Disable default inter-container communication with --icc=false and use --link=CONTAINER_NAME_or_ID:ALIAS to explicitly link containers together.
+        <pre class="prettyprint">
+            --icc=false --link=CONTAINER_NAME_or_ID:ALIAS</pre>
+        </li>
+
+        <li>Consider limits on memory, cpu, number of restarts (--restart=on-failure:<number_of_restarts>), maximum number of file descriptors (--ulimit nofile=<number>) and maximum number of processes (--ulimit nproc=<number>). <a href="https://docs.docker.com/engine/reference/commandline/run/#set-ulimits-in-container---ulimit">Ulimits reference</a></li>
+
+        <li>If the application permits it, always use read-only filesystems with the --read-only to prevent modifications. This can be combined with tmpfs if the container needs to persist files temporarily.
+        <pre class="prettyprint">
+            --read-only --tmpfs /tmp</pre>
+        </li>
+        <li>Run Docker containers with --security-opt=no-new-privileges in order to prevent privilege escalation if a vulnerability does get exploited.
+        <pre class="prettyprint">
+            --security-opt=no-new-privileges</pre>
+        </li>
+        <li>Keep the host and Docker up to date. This should be part of the regular deploy process but bears repeating - up-to-date systems help thwart container escape vulnerabilities.</li>
+        <li>Lastly, regularly audit the containers with tools such as <a href="https://github.com/coreos/clair">Clair</a>, Synk. These can check Docker images for vulnreabilities.</li>
+        </ol>
+    </ol>
+    <p>This is a pretty long list, but most of the advice boils down to this: Think carefully about exactly what you need your containers to do and make sure they are not capable of doing anything more. Careful application design can save you from many problems down the line.</p>
+</article>
+<footer>
+    
+    <a href="/">&laquo;Back to homepage</a> <span>&copy; 2019, Varun Naik</span></footer>
+</body>
+
+</html>
