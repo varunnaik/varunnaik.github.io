@@ -17,11 +17,12 @@
     <h1>Track and Photograph Ships with Software Defined Radio</h1>
     <hr />
     <p>First, the photographs: You can view them online on the capture website for the project at the <a
-        href="https://blog.vnaik.com/sydney-ships/#" target="_blank">Sydney Ships Viewer</a>.</p>>
-    <p>With a Software Defined Radio you can pick up all kinds of interesting signals with cheap commercial hardware. A
-      RTL dongle is easily obtained online and can be connected to a Raspberry Pi to create a platform for experiments.
+        href="https://blog.vnaik.com/sydney-ships/#" target="_blank">Sydney Ships Viewer</a>.</p>
+    <p>A Software Defined Radio allows you to pick up all kinds of interesting signals using cheap commercial hardware.
+      A
+      RTL dongle is easily obtained online and combined with a Raspberry Pi, creates a perfect platform for experiments.
       I used an <a href="http://www.nooelec.com/store/nesdr-mini-rtl2832-r820t.html">RTL2832 dongle</a> for this
-      project, although there are several options available as listed on the <a href="https://www.rtl-sdr.com/">RTL-SDR
+      project, and there are several alternatives available as listed on the <a href="https://www.rtl-sdr.com/">RTL-SDR
         website</a>.</p>
 
     <p>Ships at sea broadcast AIS (Automatic Identification System) messages every few minutes when underway. They also
@@ -39,20 +40,15 @@
       The geofenced area where ships are detected
     </figure>
 
-    <p>Using the GPS coordinates from the AIS messages broadcast by ships every couple of minutes when they are
-      underway, it is easy to compute if the ship is inside the geofence or not, and record the time a vessel enters the
-      geofence. And entering the geofenced area can be used as a trigger to start a capture.</p>
-
-    <p>There were several challenges getting this up and running: I used a Raspberry Pi Zero W as the basis of the
-      platform, and this was simply not powerful enough to run the project reliably. In addition the tiny Pi Zero takes
-      a very long time to compile the libraries needed - doing anything in the SDR world requires a lot of compiling c++
-      libraries.</p>
-
-    <p>The little Pi's CPU runs absolutely flat out trying to process the radio - after all it is Software defined -
-      taking up 100% of all cores and occasionally crashing the driver of the RTL dongle.</p>
+    <p>Using the GPS coordinates from the AIS messages, it is possible to compute if the ship is inside the geofence or
+      not, and a ship entering the geofenced area can be used as a trigger to start a capture.</p>
 
     <p>The Raspberry Pi camera, though cheap, isn't the best for taking pretty pictures - particularly when you're only
-      interested in a small portion of the image being captured. The sensor outputs grainy, blurry images.</p>
+      interested in a small portion of the image being captured. The sensor quality leaves a lot to be desired and
+      I found that using a cheap smartphone zoom lens (2x) massively improved the captures.</p>
+
+    <p>This uses the excellend <a href="https://github.com/dgiardini/rtl-ais">RTL-AIS</a> project to process incoming
+      AIS messages and <a href="https://pypi.org/project/libais/">libais</a> to access them in Python.</p>
 
     <p>After putting a restart script in place to recover from crashes,I ran the project for a few weeks and got some
       good captures of ships transiting the Sydney Opera House.</p>
@@ -66,7 +62,7 @@
 
     <p>The data reported by the ships themselves was not always accurate, with some jumps in position that needed to be
       filtered out. The Sydney harbour also has massive traffic - and most of the vessels are too small to photograph
-      with the Raspberry Pi camera, so ships big enough to photograph need to be filtered out.</p>
+      with the Raspberry Pi camera, so ships too small to photograph well need to be filtered out.</p>
 
     <p>In theory the AIS messages themselves carry information such as the ship's dimensions, draught, name, and even
       destination port. In practice, this information is self-reported with no real standards, and the information
@@ -81,9 +77,8 @@
       NS Asia (Crude oil tanker) on 11 December 2017
     </figure>
 
-    <p>Overall the results from relatively cheap hardware were quite impressive. The RTL hardware combined with a
-      raspberry pi can enable a massive number of possibilities, allowing readings from everything ranging from weather
-      balloons and aircraft to smart electricity meters.</p>
+    <p>The project has been running well for a couple of years now, although there are occiassional dropouts if the Pi
+      crashes.</p>
 
     <p><strong>Sources</strong></p>
     <ul>
