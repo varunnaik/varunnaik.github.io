@@ -1,65 +1,99 @@
 <!doctype html>
 <html>
+
 <head>
   <meta charset="utf-8">
   <title>Track and Photograph Ships with Software Defined Radio</title>
   <link rel="canonical" href="https://blog.vnaik.com/posts/photographing-ships.html">
   <meta name="viewport" content="width=device-width,minimum-scale=1,initial-scale=1">
   <link rel="icon" href="https://blog.vnaik.com/favicon.ico" type="image/x-icon">
-  <link rel="stylesheet" href="../tufte.css"/>
+  <link rel="stylesheet" href="../tufte.css" />
   <link rel="stylesheet" href="../style.css" />
 </head>
+
 <body>
   <h2><a href="/">Vnaik.com</a></h2>
   <article>
     <h1>Track and Photograph Ships with Software Defined Radio</h1>
     <hr />
-<p><em>Note: You can view captures by date in the <a href="http://blog.vnaik.com/shippix-viewer/">Shippix ship capture viewer</a>.</em></p>
-<p>With a Software Defined Radio you can pick up all kinds of interesting signals with cheap commercial hardware. A RTL dongle is easily obtained online and can be connected to a Raspberry Pi to create a platform for experiments. I used an <a href="http://www.nooelec.com/store/nesdr-mini-rtl2832-r820t.html">RTL2832 dongle</a> for this project, although there are several options available as listed on the <a href="https://www.rtl-sdr.com/">RTL-SDR website</a>.</p>
+    <p>First, the photographs: You can view them online on the capture website for the project at the <a
+        href="https://blog.vnaik.com/sydney-ships/#" target="_blank">Sydney Ships Viewer</a>.</p>>
+    <p>With a Software Defined Radio you can pick up all kinds of interesting signals with cheap commercial hardware. A
+      RTL dongle is easily obtained online and can be connected to a Raspberry Pi to create a platform for experiments.
+      I used an <a href="http://www.nooelec.com/store/nesdr-mini-rtl2832-r820t.html">RTL2832 dongle</a> for this
+      project, although there are several options available as listed on the <a href="https://www.rtl-sdr.com/">RTL-SDR
+        website</a>.</p>
 
-<p>Ships at sea broadcast AIS (Automatic Identification System) messages every few minutes when underway. They also broadcast messages when at port at a slower frequency. The AIS system aids navigation - other vessels can use this information to plot their courses, avoiding collisions.</p>
+    <p>Ships at sea broadcast AIS (Automatic Identification System) messages every few minutes when underway. They also
+      broadcast messages when at port at a slower frequency. The AIS system aids navigation - other vessels can use this
+      information to plot their courses, avoiding collisions.</p>
 
-<p>This project uses the RTL dongle to listen to these signals and track ships as they move into and out of the Sydney harbour.</p>
+    <p>This project uses the RTL dongle to listen to these signals and track ships as they move into and out of the
+      Sydney harbour.</p>
 
-<p>In particular I wanted to count the traffic under the harbour bridge and to Circular Quay (the geofenced area below). In addition, having access to a location with line of sight to the area in question, I wanted to photograph the ships exactly as they passed under the harbour bridge and in front of the opera house.</p>
-<figure  class="fullwidth">
-<img src="photographing-ships-geofence.png" />
-The geofenced area where ships are detected
-</figure>
+    <p>In particular I wanted to count the traffic under the harbour bridge and to Circular Quay (the geofenced area
+      below). In addition, having access to a location with line of sight to the area in question, I wanted to
+      photograph the ships exactly as they passed under the harbour bridge and in front of the opera house.</p>
+    <figure class="fullwidth">
+      <img src="photographing-ships-geofence.png" />
+      The geofenced area where ships are detected
+    </figure>
 
-<p>Using the GPS coordinates from the AIS messages broadcast by ships every couple of minutes when they are underway, it is easy to compute if the ship is inside the geofence or not, and record the time a vessel enters the geofence. And entering the geofenced area can be used as a trigger to start a capture.</p>
+    <p>Using the GPS coordinates from the AIS messages broadcast by ships every couple of minutes when they are
+      underway, it is easy to compute if the ship is inside the geofence or not, and record the time a vessel enters the
+      geofence. And entering the geofenced area can be used as a trigger to start a capture.</p>
 
-<p>There were several challenges getting this up and running: I used a Raspberry Pi Zero W as the basis of the platform, and this was simply not powerful enough to run the project reliably. In addition the tiny Pi Zero takes a very long time to compile the libraries needed - doing anything in the SDR world requires a lot of compiling c++ libraries.</p>
+    <p>There were several challenges getting this up and running: I used a Raspberry Pi Zero W as the basis of the
+      platform, and this was simply not powerful enough to run the project reliably. In addition the tiny Pi Zero takes
+      a very long time to compile the libraries needed - doing anything in the SDR world requires a lot of compiling c++
+      libraries.</p>
 
-<p>The little Pi's CPU runs absolutely flat out trying to process the radio - after all it is Software defined - taking up 100% of all cores and occasionally crashing the driver of the RTL dongle.</p>
+    <p>The little Pi's CPU runs absolutely flat out trying to process the radio - after all it is Software defined -
+      taking up 100% of all cores and occasionally crashing the driver of the RTL dongle.</p>
 
-<p>The Raspberry Pi camera, though cheap, isn't the best for taking pretty pictures - particularly when you're only interested in a small portion of the image being captured. The sensor outputs grainy, blurry images.</p>
+    <p>The Raspberry Pi camera, though cheap, isn't the best for taking pretty pictures - particularly when you're only
+      interested in a small portion of the image being captured. The sensor outputs grainy, blurry images.</p>
 
-<p>After putting a restart script in place to recover from crashes,I ran the project for a few weeks and got some good captures of ships transiting the Sydney Opera House.</p>
+    <p>After putting a restart script in place to recover from crashes,I ran the project for a few weeks and got some
+      good captures of ships transiting the Sydney Opera House.</p>
 
-<figure  class="fullwidth">
-  <video width="100%"  controls>
-  <source src="photographing-ships-capture.mp4" type="video/mp4">
-</video>
-The Sunshine Princess crosses the Sydney Harbour, 26 November 2017
-</figure>
+    <figure class="fullwidth">
+      <video width="100%" controls>
+        <source src="photographing-ships-capture.mp4" type="video/mp4">
+      </video>
+      The Sunshine Princess crosses the Sydney Harbour, 26 November 2017
+    </figure>
 
-<p>The data reported by the ships themselves was not always accurate, with some jumps in position that needed to be filtered out. The Sydney harbour also has massive traffic - and most of the vessels are too small to photograph with the Raspberry Pi camera, so ships big enough to photograph need to be filtered out.</p>
-  
-<p>In theory the AIS messages themselves carry information such as the ship's dimensions, draught, name, and even destination port. In practice, this information is self-reported with no real standards, and the information (other than the MMSI identifier and the GPS co-ordinates) is often wildly inaccurate. I attempt to filter out ships smaller than 80 metres in length to reduce the number of false captures although this often fails because not all ships report accurate sizes.</p>
+    <p>The data reported by the ships themselves was not always accurate, with some jumps in position that needed to be
+      filtered out. The Sydney harbour also has massive traffic - and most of the vessels are too small to photograph
+      with the Raspberry Pi camera, so ships big enough to photograph need to be filtered out.</p>
 
-<figure  class="fullwidth">
-  <video width="100%"  controls>
-  <source src="photographing-ships-capture-2.mp4" type="video/mp4">
-</video>
-NS Asia (Crude oil tanker) on 11 December 2017
-</figure>
+    <p>In theory the AIS messages themselves carry information such as the ship's dimensions, draught, name, and even
+      destination port. In practice, this information is self-reported with no real standards, and the information
+      (other than the MMSI identifier and the GPS co-ordinates) is often wildly inaccurate. I attempt to filter out
+      ships smaller than 80 metres in length to reduce the number of false captures although this often fails because
+      not all ships report accurate sizes.</p>
 
-<p>Overall the results from relatively cheap hardware were quite impressive. The RTL hardware combined with a raspberry pi can enable a massive number of possibilities, allowing readings from everything ranging from weather balloons and aircraft to smart electricity meters.</p>
+    <figure class="fullwidth">
+      <video width="100%" controls>
+        <source src="photographing-ships-capture-2.mp4" type="video/mp4">
+      </video>
+      NS Asia (Crude oil tanker) on 11 December 2017
+    </figure>
 
-<p><a href="https://github.com/varunnaik/shippix">The source can be found in this Github repository</a></p>
-<p>And this is the repository for the <a href="https://github.com/varunnaik/shippix-viewer">capture viewer</a>.</em></p>
-</article>
-<footer><a href="/">&laquo;Back to homepage</a> <span>&copy; 2018, Varun Naik</span></footer>
+    <p>Overall the results from relatively cheap hardware were quite impressive. The RTL hardware combined with a
+      raspberry pi can enable a massive number of possibilities, allowing readings from everything ranging from weather
+      balloons and aircraft to smart electricity meters.</p>
+
+    <p><strong>Sources</strong></p>
+    <ul>
+      <li>The source for the Python ship capture running on the Raspberry Pi: <a
+          href="https://github.com/varunnaik/shippix">varunnaik/shippix</a></li>
+      <li>The React webapp to view captures: <a
+          href="https://github.com/varunnaik/sydney-ships">varunnaik/sydney-ships</a></li>
+    </ul>
+  </article>
+  <footer><a href="/">&laquo;Back to homepage</a> <span>&copy; 2018, Varun Naik</span></footer>
 </body>
+
 </html>
