@@ -16,8 +16,10 @@
   <article>
     <h1>Track and Photograph Ships with Software Defined Radio</h1>
     <hr />
-    <p>First, the photographs: You can view them online on the capture website for the project at the <a
-        href="https://blog.vnaik.com/sydney-ships/#" target="_blank">Sydney Ships Viewer</a>.</p>
+    <p>This project uses a Raspberry Pi, a Raspberry Pi Camera, and an RTL-SDR receiver to capture timelapses
+      of ships transiting the Sydney harbour.</p>
+    <p>You can view the videos on the capture website for the project, <a href="https://blog.vnaik.com/sydney-ships/#"
+        target="_blank">Sydney Ships Viewer</a>.</p>
     <p>A Software Defined Radio allows you to pick up all kinds of interesting signals using cheap commercial hardware.
       A
       RTL dongle is easily obtained online and combined with a Raspberry Pi, creates a perfect platform for experiments.
@@ -32,9 +34,11 @@
     <p>This project uses the RTL dongle to listen to these signals and track ships as they move into and out of the
       Sydney harbour.</p>
 
-    <p>In particular I wanted to count the traffic under the harbour bridge and to Circular Quay (the geofenced area
-      below). In addition, having access to a location with line of sight to the area in question, I wanted to
-      photograph the ships exactly as they passed under the harbour bridge and in front of the opera house.</p>
+    <p>The area under the harbour bridge and to Circular Quay (the geofenced area
+      below) is the designated geofence - ships entering or leaving the area, as advertised by AIS, are
+      logged. In addition, having access to a location with line of sight to the area in
+      question, I
+      photograph the ships exactly as they pass under the harbour bridge and in front of the opera house.</p>
     <figure class="fullwidth">
       <img src="photographing-ships-geofence.png" />
       The geofenced area where ships are detected
@@ -47,11 +51,12 @@
       interested in a small portion of the image being captured. The sensor quality leaves a lot to be desired and
       I found that using a cheap smartphone zoom lens (2x) massively improved the captures.</p>
 
-    <p>This uses the excellend <a href="https://github.com/dgiardini/rtl-ais">RTL-AIS</a> project to process incoming
-      AIS messages and <a href="https://pypi.org/project/libais/">libais</a> to access them in Python.</p>
+    <p>The capture software is written in Python and uses AWS for backend processing work. A link to this repository is
+      at the bottom of this post.</p>
 
-    <p>After putting a restart script in place to recover from crashes,I ran the project for a few weeks and got some
-      good captures of ships transiting the Sydney Opera House.</p>
+    <p>The project uses the excellent <a href="https://github.com/dgiardini/rtl-ais">RTL-AIS</a> project to process
+      incoming
+      AIS messages and <a href="https://pypi.org/project/libais/">libais</a> to access them in Python.</p>
 
     <figure class="fullwidth">
       <video width="100%" controls>
@@ -60,8 +65,9 @@
       The Sunshine Princess crosses the Sydney Harbour, 26 November 2017
     </figure>
 
-    <p>The data reported by the ships themselves was not always accurate, with some jumps in position that needed to be
-      filtered out. The Sydney harbour also has massive traffic - and most of the vessels are too small to photograph
+    <p>The data reported by the ships themselves is not always accurate, with some jumps in position that needed to be
+      filtered out. As you might imagine, Sydney harbour is a busy area with lots of traffic - and most of the vessels
+      are too small to photograph
       with the Raspberry Pi camera, so ships too small to photograph well need to be filtered out.</p>
 
     <p>In theory the AIS messages themselves carry information such as the ship's dimensions, draught, name, and even
@@ -77,8 +83,8 @@
       NS Asia (Crude oil tanker) on 11 December 2017
     </figure>
 
-    <p>The project has been running well for a couple of years now, although there are occiassional dropouts if the Pi
-      crashes.</p>
+    <p>The Pi sends the captured images to an S3 bucket, and an AWS Lambda uses ffmpeg to convert these to a video. This
+      could be done on the Pi, but the Raspberry Pi Zero I use lacks power.</p>
 
     <p><strong>Sources</strong></p>
     <ul>
