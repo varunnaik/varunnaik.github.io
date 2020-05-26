@@ -1,110 +1,237 @@
 <!doctype html>
 <html>
-<head>
-  <meta charset="utf-8">
-  <title>CSRF, CORS, and HTTP Security headers Demystified</title>
-  <link rel="canonical" href="https://blog.vnaik.com/posts/web-attacks.html">
-  <meta name="viewport" content="width=device-width,minimum-scale=1,initial-scale=1">
-  <link rel="icon" href="https://blog.vnaik.com/favicon.ico" type="image/x-icon">
-  <link rel="stylesheet" href="../tufte.css"/>
-  <link rel="stylesheet" href="../style.css" />
-  <style>
-  	body {
-  		max-width: 60rem;
-  	}
-  	h2 {
-  		margin-top: 3.1rem;
-  	}
-  </style>
-</head>
-<body>
-  <h2><a href="/">Vnaik.com</a></h2>
-<article>
 
-	<h1>CSRF, CORS, and HTTP Security headers Demystified</h1>
-	<p>With an increasing number of breaches, intrusions, and data thefts, securing a web application is extremely important.</p>
-	<p>On the other hand, programmers often do not have a strong grasp of how attacks work and how to mitigate them. This post attempts to close that gap a little.</p>
-	<h2 id="csrf">CSRF</h2>
-	<p><em>Cross-Site Request Forgery</em> is an attack where a third party forces a user to execute actions against a site where they are currently logged in.</p>
-	<p>Here is an example illustrating how this works:</p>
-	<ol>
-	<li>You visit <em>evil.com</em></li>
-	<li><em>evil.com</em> has a hidden form that submits on page load to <em>mybank.com/transfer-funds</em>. Since you are logged in to <em>mybank.com</em>, this request is made with your <em>mybank.com</em> cookies and will silently initiate a money transfer out of your account.</li>
-	<li>Since &#39;<em>evil.com</em>&#39; and &#39;<em>mybank.com</em>&#39; are different origins, the browser refuses to provide the response to <em>evil.com</em>, but the attacker doesn&#39;t care, he got the money. </li>
-	</ol>
-	<p>Now if <em>mybank.com</em> implements CSRF protection correctly:</p>
-	<ol>
-	<li>Each time <em>mybank.com</em> serves a form to a user, it generates a CSRF token and inserts it into a hidden field in the form</li>
-	<li>If a POST request is received, it checks the CSRF token against its database - if this is present and valid then the request goes through. If the CSRF token is missing or incorrect it is rejected.</li>
-	</ol>
-	<p>CSRF attacks target state-changing requests and not the direct theft of data because the attacker does not see the response of the forged request. The CSRF token provides security by being a stateless token that is never stored in the cookies or permanent storage - doing so would defeat the purpose of the token.</p>
-	<p>CSRF protection support needs to be added to your application code and cannot be added at the proxy server layer (eg. in Nginx).
-	<a href="https://github.com/OWASP/CheatSheetSeries/blob/master/cheatsheets/Cross-Site_Request_Forgery_Prevention_Cheat_Sheet.md">A detailed look at CSRF from OWASP</a></p>
-	<p>Using the <a href="https://www.owasp.org/index.php/SameSite">SameSite directive</a> with cookies can also provide protection against CSRF attacks.</p>
-	<h2 id="cors">CORS</h2>
-	<p><em>Cross-Origin Request Sharing</em> only applies in a browser context and is a security mechanism to allow one origin to make a request to another origin. All browsers follow the Single Origin Policy, meaning by default scripts cannot make requests to other origins - but if the server provides properly configured CORS headers this policy can be selectively relaxed. Thus CORS is a way of selectively loosening security and not of tightening it.</p>
-	<p>When a website makes an XHR request to another origin, the browser initiates a preflight OPTIONS request first - and the original request is only made if the server responds to this preflight with a list of allowed origins, and this list contains the origin of the current page.</p>
-	<p>Note that CORS preflight requests are not made for GET HEAD POST requests with default headers.</p>
-	<p>Some key headers sent as a response to an OPTIONS request:</p>
+<head>
+	<meta charset="utf-8">
+	<title>CSRF, CORS, and HTTP Security headers Demystified</title>
+	<link rel="canonical" href="https://blog.vnaik.com/posts/web-attacks.html">
+	<meta name="viewport" content="width=device-width,minimum-scale=1,initial-scale=1">
+	<link rel="icon" href="https://blog.vnaik.com/favicon.ico" type="image/x-icon">
+	<link rel="stylesheet" href="../tufte.css" />
+	<link rel="stylesheet" href="../style.css" />
+	<style>
+		body {
+			max-width: 60rem;
+		}
+
+		h2 {
+			margin-top: 3.1rem;
+		}
+	</style>
+</head>
+
+<body>
+	<h2><a href="/">Vnaik.com</a></h2>
+	<article>
+
+		<h1>CSRF, CORS, and HTTP Security headers Demystified</h1>
+		<p>With an increasing number of breaches, intrusions, and data thefts, securing a web application is extremely
+			important.</p>
+		<p>On the other hand, programmers often do not have a strong grasp of how attacks work and how to mitigate them.
+			This post attempts to close that gap a little.</p>
+		<h2 id="csrf">CSRF</h2>
+		<p><em>Cross-Site Request Forgery</em> is an attack where a third party forces a user to execute actions against
+			a site where they are currently logged in.</p>
+		<p>Here is an example illustrating how this works:</p>
+		<ol>
+			<li>You visit <em>evil.com</em></li>
+			<li><em>evil.com</em> has a hidden form that submits on page load to <em>mybank.com/transfer-funds</em>.
+				Since you are logged in to <em>mybank.com</em>, this request is made with your <em>mybank.com</em>
+				cookies and will silently initiate a money transfer out of your account.</li>
+			<li>Since &#39;<em>evil.com</em>&#39; and &#39;<em>mybank.com</em>&#39; are different origins, the browser
+				refuses to provide the response to <em>evil.com</em> (because of CORS), but the attacker doesn&#39;t
+				care, the money's already been transferred.</li>
+		</ol>
+		<p>Now if <em>mybank.com</em> implements CSRF protection correctly:</p>
+		<ol>
+			<li>Each time <em>mybank.com</em> serves a form to a user, it generates a CSRF token and inserts it into a
+				hidden field in the form</li>
+			<li>If a POST request is received, it checks the CSRF token against its database - if this is present and
+				valid then the request goes through. If the CSRF token is missing or incorrect it is rejected.</li>
+		</ol>
+		<p>CSRF attacks target state-changing requests and not the direct theft of data because the attacker does not
+			see the response of the forged request. The CSRF token provides security by being a stateless token that is
+			never stored in the cookies or permanent storage - doing so would defeat the purpose of the token.</p>
+		<p>CSRF protection support needs to be added to your application code and cannot be added at the proxy server
+			layer (eg. in Nginx).
+			<a
+				href="https://github.com/OWASP/CheatSheetSeries/blob/master/cheatsheets/Cross-Site_Request_Forgery_Prevention_Cheat_Sheet.md">A
+				detailed look at CSRF from OWASP</a></p>
+		<p>It is good practice to always use the <a href="https://www.owasp.org/index.php/SameSite">SameSite
+				directive</a> with cookies as this provides protection against CSRF attacks.</p>
+		<h2 id="cors">CORS</h2>
+		<p><em>Cross-Origin Request Sharing</em> only applies in a browser context and is a security mechanism to allow
+			one origin to make a request to another origin. All browsers follow the Single Origin Policy, meaning by
+			default scripts cannot make requests to other origins - but if the server provides properly configured CORS
+			headers this policy can be selectively relaxed. Thus CORS is a way of selectively loosening security and not
+			of tightening it.</p>
+		<p>When a website makes an XHR request to another origin, the browser initiates a preflight OPTIONS request
+			first - and the original request is only made if the server responds to this preflight with a list of
+			allowed origins, and this list contains the origin of the current page.</p>
+		<p>Note that CORS preflight requests are not made for GET HEAD POST requests with default headers.</p>
+		<p>Some key headers sent as a response to an OPTIONS request:</p>
 		<ul>
-		<li><em>access-control-allow-credentials</em>: If set, cookies are sent by the browser</li>
-		<li><em>access-control-allow-origin</em>: The list of origins allowed to make requests, or &#39;*&#39; to allow anyone to make requests. If access-control-allow-credentials is set then this cannot be set to &#39;*&#39; or the browser will reject the request anyway</li>
-		<li><em>access-control-allow-methods</em>: The list of HTTP methods allowed to communicate - POST, PUT, etc.</li>
-	</ul>
-	<p>The reason <em>access-control-allow-origin</em> cannot be '*' when <em>access-control-allow-credentials</em> is set is to prevent developers taking the shortcut of adding a * and then forgetting about it altogether - this behaviour forces developers to think about how their API is going to be consumed.</p>
-	<p>CORS is often a code smell of sorts - for example, a common use of CORS is to allow multiple properties access to one API, like <em>mybank.com</em> being accessed by <em>mybankpersonal.com</em> and <em>mybankbusiness.com</em> - and in these cases, CORS can be avoided altogether with the use of an API gateway. If all web pages are served from the same domain (<em>mybank.com</em>), no CORS headers need to be set and the browser can apply the full Same Origin Policy and provide maximum security. After all, CORS only serves to selectively decrease security not increase it.</p>
-	<p>On the other hand, using CORS is unavoidable if you are providing an API for third parties to consume from a browser (eg. after going through an Oauth process).</p>
-	<p>Of course, CORS is irrelevant for requests made outside the web browser, eg. with Curl or with server-server communication.</p>
-	<h2 id="xss">XSS</h2>
-	<p><em>Cross-Site Scripting</em> is an attack where an attacker injects a client-side script into a web page. XSS can be used to bypass both the same-origin policy and CSRF protections.</p>
-	<p>This is done either by compromising the server (eg. by using a known exploit) or by leveraging poorly-sanitised user inputs to add a script to the website, which is triggered whenever a user visits the website.</p>
-	<p>This is the most commonly exploited vulnerability and can be fixed with careful sanitisation and encoding for display of all user input - even things like email addresses could be vectors for script injection. For instance., </p><pre><code>"&gt;&lt;script&gt;alert(1);&lt;/script&gt;"@example.org</code></pre> <p>is a valid email address by RFC 5321! More information at the <a href="https://github.com/OWASP/CheatSheetSeries/blob/master/cheatsheets/Cross_Site_Scripting_Prevention_Cheat_Sheet.md">OWASP's XSS page</a>.</p>
-	<h2 id="csp">CSP</h2>
-	<p><em>Content Security Policy</em> is an added layer of security to detect and mitigate XSS attacks. By specifying the domains that should be considered valid sources for scripts, a web browser will only execute scripts loaded from these white listed domains. CSP can specify allowed origins for all dynamic origins, including scripts, stylesheets, images, fonts, objects, media (audio, video), frames, and even form-actions.</p>
-	<p>CSP is set through the Content-Security-Policy HTTP header.</p>
-	<p>The difference from CORS is that CORS prevents a third party from accessing a server, while CSP prevents a website itself from loading content from a third party, as a defence against XSS.</p>
-	<p>CSP is not a silver bullet against XSS but it helps. Ultimately XSS needs to be prevented with careful application design and effective user input sanitisation, both on the frontend and the backend.</p><p>Of all the mitigations on this page, CSP is the most complicated because of the depth of its options and also likely the hardest to implement because every time a front-end dev adds a new CDN - for fonts, scripts, whatever - that CDN needs to be added to the CSP header. Without a well-designed test setup, this could work fine in dev but break when pushed to production.</p><p>CSP is complicated enough to require more than a few paragraphs - a full page would do it more justice.</p><p>The <a href="https://content-security-policy.com/">Content Security Policy web site</a> describes how to add CSP support to your web server and Google's <a href="https://csp-evaluator.withgoogle.com/">handy test tool</a> can help test these policies.</p>
-	<h2 id="hsts">HSTS</h2>
-	<p><em>HTTP Strict Transport Security</em> protects against protocol downgrade attacks and cookie hijacking by allowing a server to declare that browsers should only interact with it using HTTPS connections and never HTTP; and the browser should always convert all attempts to access the site using HTTP to HTTPS instead, eg. by rewriting all links to use HTTPS instead of HTTP.</p>
-	<p>This guards against eavesdropping and man-in-the-middle attacks that work by transparently converting a https connection into plain http.</p>
-	<p>For example, you might connect to a free wifi service at the airport to access your bank website, but the access point is actually a hacker&#39;s laptop that performs a MITM attack and redirects you to a clone of the bank&#39;s site. HSTS provides security in this scenario as long as you have accessed your bank&#39;s web site at least one over HTTPS (and the bank uses HSTS), the browser will reject this request outright.</p><p>This page has details on <a href="https://www.nginx.com/blog/http-strict-transport-security-hsts-and-nginx/">configuring HSTS for Nginx</a>.</p>
-	<h2 id="hpkp">HPKP</h2>
-	<p><em>HTTP Public Key Pinning</em> allows HTTPS websites to resist impersonation using fraudulently obtained SSL certificates by providing the browser a set of public keys which are the only ones to be trusted for future connections to the same origin.</p>
-	<p>This provides security against a compromised certificate authority as has happened in the past with Comodo.</p>
-	<p>In the airport scenario above, if the hacker also had a fraudulently obtained certificate for the bank, HSTS alone would not protect you - but with HPKP, even this attack can be mitigated. This is a Trust-on-first-use technique.</p>
-	<p>HPKP will eventually be superseded by the Expect-CT header. <a href="https://developer.mozilla.org/en-US/docs/Web/HTTP/Public_Key_Pinning">More on HPKP</a>.</p>
-	<h2 id="set-cookie">Set-Cookie</h2>
-	<p>This is a fairly standard header and by far the oldest on the page, yet is important to configure correctly.</p>
-	<p>This can be done by setting a few directives.</p>
-	<ul><li>The <strong><a href="https://www.owasp.org/index.php/SameSite">SameSite: Strict</a></strong> directive can help protect against CSRF attacks by stripping cookies from all cross-domain requests.</li>
-	<li>The <strong>Secure</strong> directive ensures the cookies are only ever used in a https connection - thus providing additional security over what is provided by HPKP and HSTS.</li>
-	<li>The <strong>HttpOnly</strong> directive ensures JavaScript cannot access the cookie.</li>
-	</ul>
-	<p>You will as a rule want to set all three. More on <a href="https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Set-Cookie">Set-Cookie</a></p>
-	<h2 id="others">Other Headers</h2>
-	<p>These are generally less important to set but good to be aware of.</p>
-	<ul>
-		<li><em>X-XSS Protection</em>: This header is outdated and possibly harmful and CSP does a better job of providing protections. The main job of this in Chrome is to trigger the <a href="https://groups.google.com/a/chromium.org/forum/#!msg/blink-dev/TuYw-EZhO9g/blGViehIAwAJ">XSS auditor which has been deprecated</a> for <a href="https://portswigger.net/blog/abusing-chromes-xss-auditor-to-steal-tokens">being insecure</a>.</li>
-		<li><em>X-Frame-Options</em>: This header indicates whether the site should be allowed to be displayed within an iFrame. This has been superseded by <strong>CSP's frame-ancestors</strong> option which is better supported in modern browsers.</li>
-		<li><em>X-Content-Type-Options</em>: This prevents the browser from attempting to guess the type of content if the Content-Type header is not set. This can prevent XSS exploits for websites that allow users to upload and share files.</li>
-		<li><em>X-Download Options</em>: Again useful in scenarios involving user file uploads, when set to 'noopen' this forces the browser to download a file instead of attempting to display it in the browser.</li>
-		<li><em>Referrer-Policy</em>: When this is set to 'no-referrer' the browser does not send the referrer when making a request and is useful for privacy. <a href="https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Referrer-Policy">More on referrer-policy</a>.</li>
-	</ul>
-	<hr />
-	<p>Overall, as the web grows in terms of features and complexity, the attack surface also grows correspondingly large. A properly configured web server and a well designed application with effective use of HTTPS (eg. with Let's Encrypt) can provide a good degree of protection.</p>
-	<p>As an added bonus, many of the mitigations on this page can be applied at the proxy server (CSP, HSTS, HPKP) or network level (better server proxying to remove the need for CORS), and only the CSRF and XSS protections really need to be added to the application. of course, the mitigations on this page are only a small subset of what is possible.</p>
-	<p>Some useful resources to implement these:
+			<li><em>access-control-allow-credentials</em>: If set, cookies are sent by the browser</li>
+			<li><em>access-control-allow-origin</em>: The list of origins allowed to make requests, or &#39;*&#39; to
+				allow anyone to make requests. If access-control-allow-credentials is set then this cannot be set to
+				&#39;*&#39; or the browser will reject the request anyway</li>
+			<li><em>access-control-allow-methods</em>: The list of HTTP methods allowed to communicate - POST, PUT, etc.
+			</li>
+		</ul>
+		<p>The reason <em>access-control-allow-origin</em> cannot be '*' when <em>access-control-allow-credentials</em>
+			is set is to prevent developers taking the shortcut of adding a * and then forgetting about it altogether -
+			this behaviour forces developers to think about how their API is going to be consumed.</p>
+		<p>CORS is often a code smell of sorts - for example, a common use of CORS is to allow multiple properties
+			access to one API, like <em>mybank.com</em> being accessed by <em>mybankpersonal.com</em> and
+			<em>mybankbusiness.com</em> - and in these cases, CORS can be avoided altogether with the use of an API
+			gateway. If all web pages are served from the same domain (<em>mybank.com</em>), no CORS headers need to be
+			set and the browser can apply the full Same Origin Policy and provide maximum security. After all, CORS only
+			serves to selectively decrease security not increase it.</p>
+		<p>On the other hand, using CORS is unavoidable if you are providing an API for third parties to consume from a
+			browser (eg. after going through an Oauth process).</p>
+		<p>Of course, CORS is irrelevant for requests made outside the web browser, eg. with Curl or with
+			server-to-server
+			communication.</p>
+		<h2 id="xss">XSS</h2>
+		<p><em>Cross-Site Scripting</em> is an attack where an attacker injects a client-side script into a web page.
+			XSS can be used to bypass both the same-origin policy and CSRF protections.</p>
+		<p>This is done either by compromising the server (eg. by using a known exploit) or by leveraging
+			poorly-sanitised user inputs to add a script to the website, which is triggered whenever a user visits the
+			website.</p>
+		<p>This is the most commonly exploited vulnerability and can be fixed with careful sanitisation and encoding for
+			display of all user input - even things like email addresses could be vectors for script injection. For
+			instance., </p>
+		<pre><code>"&gt;&lt;script&gt;alert(1);&lt;/script&gt;"@example.org</code></pre>
+		<p>is a valid email address by RFC 5321!</p>
+		<p>XSS is best sanitised on the output side, this way raw data is stored in the database as input by the user
+			and is then escaped to an appropriate format at the time it is sent out again - for example, if the result
+			is to be sent as part of HTML page the escaping will be different from if the result is to be sent as JSON
+			or included in a script tag in the HTML page. The escaping should be appropriate to the output format.
+			Additionally, if content is escaped before insert into the database it won't be secure against future
+			changes to business requirements - for example, if the business decides to serve data through a REST API
+			when it was previously only used in a HTML page, the encoding would now be irrelevant.
+		</p>
+		<p>
+			Care must be taken to ensure the sanitisation is done safely - it may be possible to easily
+			bypass sanitisation and several such attacks exist. For instance, it may be possible to simply add text such
+			as:</p>
+		<pre><code>&lt;scr&lt;script&gt;ipt&gt;alert(1)&lt;/script&gt;</code></pre>
+		<p>where the sanitisation filter strips out the script tag, but in doing so causes the split script tag to come
+			together and the attack to succeed.
+		</p>
+		<p>OWASP has a comprehensive section on
+			<a href="https://owasp.org/www-community/xss-filter-evasion-cheatsheet">XSS sanitisation bypasses</a>.</p>
+		<p>The OWASP <a
+				href="https://cheatsheetseries.owasp.org/cheatsheets/Cross_Site_Scripting_Prevention_Cheat_Sheet.html">cheat
+				sheet on XSS prevention</a> is a good starting point for securing an application against XSS.</p>
+		<h2 id="csp">CSP</h2>
+		<p><em>Content Security Policy</em> is an added layer of security to detect and mitigate XSS attacks. By
+			specifying the domains that should be considered valid sources for scripts, a web browser will only execute
+			scripts loaded from these white listed domains. CSP can specify allowed origins for all dynamic origins,
+			including scripts, stylesheets, images, fonts, objects, media (audio, video), frames, and even form-actions.
+		</p>
+		<p>CSP is set through the Content-Security-Policy HTTP header.</p>
+		<p>The difference from CORS is that CORS prevents a third party from accessing a server, while CSP prevents a
+			website itself from loading content from a third party, as a defence against XSS.</p>
+		<p>CSP is not a silver bullet against XSS but it helps. Ultimately XSS needs to be prevented with careful
+			application design and effective user input sanitisation, both on the frontend and the backend.</p>
+		<p>Of all the mitigations on this page, CSP is the most complicated because of the depth of its options and also
+			likely the hardest to implement because every time a front-end dev adds a new CDN - for fonts, scripts,
+			whatever - that CDN needs to be added to the CSP header. Without a well-designed test setup, this could work
+			fine in dev but break when pushed to production.</p>
+		<p>CSP is complicated enough to require more than a few paragraphs - a full page would do it more justice.</p>
+		<p>The <a href="https://content-security-policy.com/">Content Security Policy web site</a> describes how to add
+			CSP support to your web server and Google's <a href="https://csp-evaluator.withgoogle.com/">handy test
+				tool</a> can help test these policies.</p>
+		<h2 id="hsts">HSTS</h2>
+		<p><em>HTTP Strict Transport Security</em> protects against protocol downgrade attacks and cookie hijacking by
+			allowing a server to declare that browsers should only interact with it using HTTPS connections and never
+			HTTP; and the browser should always convert all attempts to access the site using HTTP to HTTPS instead, eg.
+			by rewriting all links to use HTTPS instead of HTTP.</p>
+		<p>This guards against eavesdropping and man-in-the-middle attacks that work by transparently converting a https
+			connection into plain http.</p>
+		<p>For example, you might connect to a free wifi service at the airport to access your bank website, but the
+			access point is actually a hacker&#39;s laptop that performs a MITM attack and redirects you to a clone of
+			the bank&#39;s site. HSTS provides security in this scenario as long as you have accessed your bank&#39;s
+			web site at least once over HTTPS (and the bank uses HSTS), the browser will reject this request outright.
+		</p>
+		<p>This page has details on <a
+				href="https://www.nginx.com/blog/http-strict-transport-security-hsts-and-nginx/">configuring HSTS for
+				Nginx</a>.</p>
+		<h2 id="hpkp">HPKP</h2>
+		<p><em>HTTP Public Key Pinning</em> allows HTTPS websites to resist impersonation using fraudulently obtained
+			SSL certificates by providing the browser a set of public keys which are the only ones to be trusted for
+			future connections to the same origin.</p>
+		<p>This provides security against a compromised certificate authority as has happened in the past with Comodo.
+		</p>
+		<p>In the airport scenario above, if the hacker also had a fraudulently obtained certificate for the bank, HSTS
+			alone would not protect you - but with HPKP, even this attack can be mitigated. This is a Trust-on-first-use
+			technique.</p>
+		<p>HPKP will eventually be superseded by the Expect-CT header. <a
+				href="https://developer.mozilla.org/en-US/docs/Web/HTTP/Public_Key_Pinning">More on HPKP</a>.</p>
+		<h2 id="set-cookie">Set-Cookie</h2>
+		<p>This is a fairly standard header and by far the oldest on the page, yet is one of the most important (and
+			easiest) to configure correctly.
+		</p>
+		<p>This can be done by setting a few directives.</p>
+		<ul>
+			<li>The <strong><a href="https://www.owasp.org/index.php/SameSite">SameSite: Strict</a></strong> directive
+				protects against CSRF attacks by stripping cookies from all cross-domain requests.</li>
+			<li>The <strong>Secure</strong> directive ensures the cookies are only ever used in a https connection -
+				thus providing additional security over what is provided by HPKP and HSTS.</li>
+			<li>The <strong>HttpOnly</strong> directive ensures JavaScript cannot access the cookie.</li>
+		</ul>
+		<p>You will as a rule want to set all three. More on <a
+				href="https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Set-Cookie">Set-Cookie</a></p>
+		<h2 id="others">Other Headers</h2>
+		<p>These are generally less important to set but good to be aware of.</p>
+		<ul>
+			<li><em>X-XSS Protection</em>: This header is outdated and possibly harmful and CSP does a better job of
+				providing protections. The main job of this in Chrome is to trigger the <a
+					href="https://groups.google.com/a/chromium.org/forum/#!msg/blink-dev/TuYw-EZhO9g/blGViehIAwAJ">XSS
+					auditor which has been deprecated</a> for <a
+					href="https://portswigger.net/blog/abusing-chromes-xss-auditor-to-steal-tokens">being insecure</a>.
+			</li>
+			<li><em>X-Frame-Options</em>: This header indicates whether the site should be allowed to be displayed
+				within an iFrame. This has been superseded by <strong>CSP's frame-ancestors</strong> option which is
+				better supported in modern browsers.</li>
+			<li><em>X-Content-Type-Options</em>: This prevents the browser from attempting to guess the type of content
+				if the Content-Type header is not set. This can prevent XSS exploits for websites that allow users to
+				upload and share files.</li>
+			<li><em>X-Download Options</em>: Again useful in scenarios involving user file uploads, when set to 'noopen'
+				this forces the browser to download a file instead of attempting to display it in the browser.</li>
+			<li><em>Referrer-Policy</em>: When this is set to 'no-referrer' the browser does not send the referrer when
+				making a request and is useful for privacy. <a
+					href="https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Referrer-Policy">More on
+					referrer-policy</a>.</li>
+		</ul>
+		<hr />
+		<p>Overall, as the web grows in terms of features and complexity, the attack surface also grows correspondingly
+			large. A properly configured web server and a well designed application with effective use of HTTPS (eg.
+			with Let's Encrypt) can provide a good degree of protection.</p>
+		<p>As an added bonus, many of the mitigations on this page can be applied at the proxy server (CSP, HSTS, HPKP)
+			or network level (better server proxying to remove the need for CORS), and only the CSRF and XSS protections
+			really need to be added to the application. of course, the mitigations on this page are only a small subset
+			of what is possible.</p>
+		<p>Some useful resources to implement these:
 		<ul>
 			<li><a href="https://securityheaders.com/">Test your site's security headers</a></li>
-			<li><a href="https://jarv.is/notes/security-headers-cloudflare-workers/">Adding security headers automatically with Cloudflare workers</a></li>
+			<li><a href="https://jarv.is/notes/security-headers-cloudflare-workers/">Adding security headers
+					automatically with Cloudflare workers</a></li>
 			<li><a href="https://csp-evaluator.withgoogle.com/">CSP evaluator to test policies</a></li>
 		</ul>
-	</p>
-	<p>That said, the application is likely the biggest source of security threats anyway, most of the <a href="https://www.owasp.org/images/7/72/OWASP_Top_10-2017_%28en%29.pdf.pdf">OWASP top ten</a> have to deal with application programming bugs - highlighting the importance of good design and application architecture.</p> 
-</article>
-    
+		</p>
+		<p>That said, the application is likely the biggest source of security threats anyway, most of the <a
+				href="https://www.owasp.org/images/7/72/OWASP_Top_10-2017_%28en%29.pdf.pdf">OWASP top ten</a> have to
+			deal with application programming bugs - highlighting the importance of good design and application
+			architecture.</p>
+	</article>
 
+	<script src="https://utteranc.es/client.js" repo="varunnaik/varunnaik.github.io" issue-term="pathname"
+		theme="github-light" crossorigin="anonymous" async>
+		</script>
 
-<footer><a href="/">&laquo;Back to homepage</a> <span>&copy; 2019, Varun Naik</span></footer>
+	<footer><a href="/">&laquo;Back to homepage</a> <span>&copy; 2019, Varun Naik</span></footer>
 </body>
+
 </html>
