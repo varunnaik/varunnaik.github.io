@@ -57,10 +57,10 @@
 			<a
 				href="https://github.com/OWASP/CheatSheetSeries/blob/master/cheatsheets/Cross-Site_Request_Forgery_Prevention_Cheat_Sheet.md">A
 				detailed look at CSRF from OWASP</a></p>
-		<p>It is good practice to always use the <a href="https://www.owasp.org/index.php/SameSite">SameSite
+		<p>It is good practice to always use the <a href="https://owasp.org/www-community/SameSite">SameSite
 				directive</a> with cookies as this provides protection against CSRF attacks.</p>
 		<h2 id="cors">CORS</h2>
-		<p><em>Cross-Origin Request Sharing</em> only applies in a browser context and is a security mechanism to allow
+		<p><em>Cross-Origin Resource Sharing</em> only applies in a browser context and is a security mechanism to allow
 			one origin to make a request to another origin. All browsers follow the Single Origin Policy, meaning by
 			default scripts cannot make requests to other origins - but if the server provides properly configured CORS
 			headers this policy can be selectively relaxed. Thus CORS is a way of selectively loosening security and not
@@ -158,17 +158,30 @@
 		<p>This page has details on <a
 				href="https://www.nginx.com/blog/http-strict-transport-security-hsts-and-nginx/">configuring HSTS for
 				Nginx</a>.</p>
-		<h2 id="hpkp">HPKP</h2>
+		<h2 id="certificate-transparency">Certificate Transparency</h2>
+		<p><em>Certificate transparency</em> allows HTTPS websites to resist impersonation using fraudulently obtained
+			SSL certificates, for example, from a compromised certificate authority as has happened in the past with Comodo.
+		</p>
+		<p>Certificate Transparency, as the name suggests, is a way making the issuance of website certificates transparent and verifiable.</p>
+		<p>It uses public append-only logs of all certificates issued by certificate authorities to function. These logs are maintained as public lists by third parties (Let's Encrypt has a <a href="https://letsencrypt.org/docs/ct-logs/">log called Oak</a>).</p>
+		<p>When a CA issues a certificate, it records this issuance with one or more CT logs.</p>
+		<p>When accepting a TLS certificate, the browser uses the SCT (Signed Certificate Timestamp) field of the certificate to find the appropriate log server and verify that the certificate matches the entry in the log.</p>
+		<p>The SCT in the certificate indicates when the issuance occurred, which log it was recorded in, and how to find it (using the signature data).</p>
+		<p>A goal of this is to make it impossible for a certificate to be issued for a domain without the domain owner knowing.</p>
+		<p>The logs themselves can be analysed and monitored by any interested parties who can watch for suspicious certificates in logs.</p>
+		<p>More on <a href="https://certificate.transparency.dev/">certificate transparency.</a></p>
+		<h2 id="hpkp">HPKP + Expect-CT (both now obsolete)</h2>
+		<p>This feature has been deprecated since this article was written, and this is now superseded by Certificate Transparency and the Expect-CT header.</p>
+		<p>Expect-CT has itself become obsolete in June 2021 (the web world moves fast) and Certificate Transparency is now the preferred way of protecting against fraudulently obtained certificates.</p>
 		<p><em>HTTP Public Key Pinning</em> allows HTTPS websites to resist impersonation using fraudulently obtained
 			SSL certificates by providing the browser a set of public keys which are the only ones to be trusted for
 			future connections to the same origin.</p>
-		<p>This provides security against a compromised certificate authority as has happened in the past with Comodo.
-		</p>
+		<p>What if a bad actor manages to hack or trick a legitimate certificate authority into issuing a certificate? HPKP, Expect-CT, and now Certificate Transparency guard against this.</p>
 		<p>In the airport scenario above, if the hacker also had a fraudulently obtained certificate for the bank, HSTS
 			alone would not protect you - but with HPKP, even this attack can be mitigated. This is a Trust-on-first-use
 			technique.</p>
 		<p>HPKP will eventually be superseded by the Expect-CT header. <a
-				href="https://developer.mozilla.org/en-US/docs/Web/HTTP/Public_Key_Pinning">More on HPKP</a>.</p>
+				href="https://developer.mozilla.org/en-US/docs/Web/HTTP/Public_Key_Pinning">More on HPKP</a> and <a href="https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Expect-CT">Expect-CT</a>.</p>
 		<h2 id="set-cookie">Set-Cookie</h2>
 		<p>This is a fairly standard header and by far the oldest on the page, yet is one of the most important (and
 			easiest) to configure correctly.
@@ -215,6 +228,8 @@
 			of what is possible.</p>
 		<p>Some useful resources to implement these:
 		<ul>
+			<li><a href="https://observatory.mozilla.org/">Scan your site for misconfigurations using Mozilla's Observatory</a></li>
+			<li><a href="https://blog.cloudflare.com/introducing-certificate-transparency-monitoring/">Get notified every time a certificate is issued for your domain, with Cloudflare</a></li>
 			<li><a href="https://securityheaders.com/">Test your site's security headers</a></li>
 			<li><a href="https://jarv.is/notes/security-headers-cloudflare-workers/">Adding security headers
 					automatically with Cloudflare workers</a></li>
